@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Almacén Industrial · Control de Obra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #181818;
+    --surface2: #222222;
+    --surface3: #2a2a2a;
+    --border: #333333;
+    --accent: #f5a623;
+    --accent2: #e8432d;
+    --accent3: #4caf8a;
+    --text: #f0ede8;
+    --text-muted: #888880;
+    --text-dim: #555;
+    --steel: #7a8fa6;
+    --radius: 4px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── SETUP SCREEN ── */
+  #setup-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    background: var(--bg);
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+  }
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    padding: 48px 40px;
+    max-width: 440px;
+    width: 100%;
+  }
+  .setup-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .setup-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 36px;
+  }
+  .setup-field { margin-bottom: 20px; }
+  .setup-field label {
+    display: block;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .setup-field input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .setup-field input:focus { border-color: var(--accent); }
+  .btn-connect {
+    width: 100%;
+    background: var(--accent);
+    color: #0f0f0f;
+    border: none;
+    padding: 14px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: opacity .2s;
+    margin-top: 8px;
+  }
+  .btn-connect:hover { opacity: .85; }
+  .setup-note {
+    margin-top: 20px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    text-align: center;
+  }
+
+  /* ── MAIN APP ── */
+  #app { display: none; min-height: 100vh; }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+  .header-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .conn-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--accent3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .conn-dot {
+    width: 7px; height: 7px;
+    background: var(--accent3);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+  .btn-reset {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 5px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: all .2s;
+  }
+  .btn-reset:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* Tabs */
+  .tabs {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    padding: 0 24px;
+    overflow-x: auto;
+    gap: 0;
+  }
+  .tab {
+    padding: 14px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-icon { font-size: 14px; }
+
+  /* Content */
+  .content { padding: 28px 24px; max-width: 1200px; margin: 0 auto; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Section headers */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 1px;
+    color: var(--text);
+  }
+  .section-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 2px;
+  }
+
+  /* Cards grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 20px;
+  }
+  .stat-card.green { border-left-color: var(--accent3); }
+  .stat-card.red { border-left-color: var(--accent2); }
+  .stat-card.blue { border-left-color: var(--steel); }
+  .stat-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 1px;
+    line-height: 1;
+    color: var(--text);
+  }
+  .stat-value small {
+    font-size: 16px;
+    color: var(--text-muted);
+    letter-spacing: 0;
+    margin-left: 4px;
+  }
+  .stat-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: var(--surface3);
+    height: 6px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--accent);
+    transition: width 1s ease;
+  }
+
+  /* Forms */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    padding: 28px;
+    margin-bottom: 28px;
+  }
+  .form-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    color: var(--accent);
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .form-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus { border-color: var(--accent); }
+  select option { background: #1a1a1a; }
+
+  .payment-methods {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pm-btn {
+    padding: 8px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    transition: all .2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .pm-btn:hover { border-color: var(--accent); color: var(--text); }
+  .pm-btn.selected { background: var(--accent); color: #0f0f0f; border-color: var(--accent); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0f0f0f;
+    border: none;
+    padding: 12px 28px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: opacity .2s;
+    margin-top: 4px;
+  }
+  .btn-primary:hover { opacity: .85; }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 10px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all .2s;
+    text-transform: uppercase;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+    padding: 6px 12px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: all .2s;
+  }
+  .btn-danger:hover { background: var(--accent2); color: white; }
+
+  /* Tables */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    margin-bottom: 24px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--surface2); }
+  thead th {
+    padding: 12px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+  }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td {
+    padding: 13px 16px;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  .tag {
+    display: inline-block;
+    padding: 3px 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 2px;
+  }
+  .tag-green { background: rgba(76,175,138,.15); color: var(--accent3); }
+  .tag-yellow { background: rgba(245,166,35,.15); color: var(--accent); }
+  .tag-red { background: rgba(232,67,45,.15); color: var(--accent2); }
+  .tag-blue { background: rgba(122,143,166,.15); color: var(--steel); }
+  .tag-gray { background: rgba(255,255,255,.07); color: var(--text-muted); }
+
+  /* Empty state */
+  .empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  /* Alert / Toast */
+  #toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .toast-item {
+    padding: 14px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn .3s ease;
+    max-width: 360px;
+  }
+  .toast-item.success { background: var(--accent3); color: #0f0f0f; }
+  .toast-item.error { background: var(--accent2); color: white; }
+  .toast-item.info { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* Loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+
+  /* Material stock bar */
+  .stock-bar-wrap { margin-top: 6px; }
+  .stock-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .stock-bar-bg {
+    height: 5px;
+    background: var(--surface3);
+    overflow: hidden;
+  }
+  .stock-bar-fill {
+    height: 100%;
+    background: var(--accent3);
+    transition: width .8s ease;
+  }
+  .stock-bar-fill.warn { background: var(--accent); }
+  .stock-bar-fill.danger { background: var(--accent2); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    display: none;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    padding: 28px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .content { padding: 16px 14px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .cards-grid { grid-template-columns: 1fr 1fr; }
+    .header-title { display: none; }
+  }
+
+  /* Horizontal rule accent */
+  .accent-line {
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    margin-bottom: 24px;
+  }
+
+  /* Dashboard avance obra */
+  .avance-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .avance-row:last-child { border-bottom: none; }
+
+  .inline-actions { display: flex; gap: 8px; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ SETUP SCREEN ═══════════════════════════════════════ -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-logo">OBRA CONTROL</div>
+    <div class="setup-sub">Almacén Industrial · Gestión de Obra</div>
+    <div class="setup-field">
+      <label>URL del Web App (AppScript)</label>
+      <input type="url" id="cfg-url" placeholder="https://script.google.com/macros/s/..." autocomplete="off">
+    </div>
+    <div class="setup-field">
+      <label>Contraseña de acceso</label>
+      <input type="password" id="cfg-pass" placeholder="••••••••" autocomplete="off">
+    </div>
+    <button class="btn-connect" onclick="conectar()">CONECTAR →</button>
+    <div class="setup-note">Los datos se guardan en Google Sheets vía AppScript</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ APP ═══════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div>
+      <div class="header-logo">OBRA CONTROL</div>
+      <div class="header-title">Almacén Industrial Metálico</div>
+    </div>
+    <div class="header-right">
+      <div class="conn-badge"><span class="conn-dot"></span>CONECTADO</div>
+      <button class="btn-reset" onclick="desconectar()">Cambiar config</button>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="tabs">
+    <div class="tab active" onclick="showTab('dashboard')" data-tab="dashboard">
+      <span class="tab-icon">◈</span>Resumen
+    </div>
+    <div class="tab" onclick="showTab('pagos')" data-tab="pagos">
+      <span class="tab-icon">◎</span>Pagos Maestro
+    </div>
+    <div class="tab" onclick="showTab('compras')" data-tab="compras">
+      <span class="tab-icon">◫</span>Compras
+    </div>
+    <div class="tab" onclick="showTab('stock')" data-tab="stock">
+      <span class="tab-icon">◰</span>Stock y Avance
+    </div>
+    <div class="tab" onclick="showTab('partidas')" data-tab="partidas">
+      <span class="tab-icon">◱</span>Partidas
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ─────────── DASHBOARD ─────────── -->
+    <div id="tab-dashboard" class="panel active">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Resumen General</div>
+          <div class="section-sub">Actualizado en tiempo real</div>
+        </div>
+        <button class="btn-secondary" onclick="loadAll()">↺ Actualizar</button>
+      </div>
+
+      <div class="cards-grid">
+        <div class="stat-card red">
+          <div class="stat-label">Saldo Maestro</div>
+          <div class="stat-value" id="dash-saldo">—<small>S/</small></div>
+          <div class="stat-note" id="dash-pagado">Pagado: —</div>
+          <div class="progress-wrap"><div class="progress-bar" id="bar-pagos" style="width:0%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Materiales</div>
+          <div class="stat-value" id="dash-materiales">—<small>S/</small></div>
+          <div class="stat-note" id="dash-ncompras">— compras registradas</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Gasto Total Obra</div>
+          <div class="stat-value" id="dash-total">—<small>S/</small></div>
+          <div class="stat-note">Constructor + Materiales</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Tipos de Material</div>
+          <div class="stat-value" id="dash-tipos">—</div>
+          <div class="stat-note" id="dash-partidas">— partidas registradas</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Material</th>
+              <th>Stock actual</th>
+              <th>Usado</th>
+              <th>Metrado</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="dash-stock-table">
+            <tr><td colspan="5" class="empty-state">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─────────── PAGOS MAESTRO ─────────── -->
+    <div id="tab-pagos" class="panel">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Pagos al Constructor</div>
+          <div class="section-sub">Monto total: S/ 79,000.00</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title">▸ REGISTRAR PAGO</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha del pago</label>
+            <input type="date" id="p-fecha">
+          </div>
+          <div class="form-group">
+            <label>Monto pagado (S/)</label>
+            <input type="number" id="p-monto" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Descripción / Concepto</label>
+            <input type="text" id="p-desc" placeholder="Ej: Adelanto semana 1, Armado columnas...">
+          </div>
+          <div class="form-group full">
+            <label>Notas adicionales</label>
+            <textarea id="p-notas" placeholder="Observaciones sobre este pago..."></textarea>
+          </div>
+        </div>
+        <div style="margin-top:16px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+          <button class="btn-primary" onclick="registrarPago()">REGISTRAR PAGO</button>
+          <div class="stat-note" style="color:var(--text-muted)">Saldo restante: <strong id="p-saldo-preview" style="color:var(--accent)">S/ 79,000.00</strong></div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Descripción</th>
+              <th>Monto</th>
+              <th>Saldo después</th>
+              <th>Notas</th>
+            </tr>
+          </thead>
+          <tbody id="pagos-table">
+            <tr><td colspan="5" class="empty-state">Sin pagos registrados</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─────────── COMPRAS ─────────── -->
+    <div id="tab-compras" class="panel">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Compras de Materiales</div>
+          <div class="section-sub">Registro de adquisiciones</div>
+        </div>
+        <button class="btn-secondary" onclick="openModal('modal-nuevo-material')">+ Nuevo Material</button>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title">▸ REGISTRAR COMPRA</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Material</label>
+            <select id="c-material" onchange="updateUnidad()">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Fecha de compra</label>
+            <input type="date" id="c-fecha">
+          </div>
+          <div class="form-group">
+            <label>Cantidad</label>
+            <input type="number" id="c-cantidad" placeholder="0" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Unidad</label>
+            <input type="text" id="c-unidad" placeholder="m3, varillas, bolsas..." readonly style="background:var(--surface2);">
+          </div>
+          <div class="form-group">
+            <label>Costo total (S/)</label>
+            <input type="number" id="c-costo" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Proveedor</label>
+            <input type="text" id="c-proveedor" placeholder="Nombre del proveedor">
+          </div>
+          <div class="form-group full">
+            <label>Método de pago</label>
+            <div class="payment-methods" id="pm-buttons">
+              <button class="pm-btn" onclick="selectPM(this,'Efectivo')">💵 Efectivo</button>
+              <button class="pm-btn" onclick="selectPM(this,'Transferencia')">🏦 Transferencia</button>
+              <button class="pm-btn" onclick="selectPM(this,'Tarjeta')">💳 Tarjeta</button>
+              <button class="pm-btn" onclick="selectPM(this,'Yape')">📱 Yape</button>
+            </div>
+            <input type="hidden" id="c-metodo">
+          </div>
+          <div class="form-group full">
+            <label>Notas del pago o adicionales</label>
+            <textarea id="c-notas" placeholder="N° operación, factura, observaciones..."></textarea>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="registrarCompra()" style="margin-top:16px">REGISTRAR COMPRA</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Material</th>
+              <th>Cantidad</th>
+              <th>Unidad</th>
+              <th>Costo (S/)</th>
+              <th>Método</th>
+              <th>Proveedor</th>
+              <th>Notas</th>
+            </tr>
+          </thead>
+          <tbody id="compras-table">
+            <tr><td colspan="8" class="empty-state">Sin compras registradas</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─────────── STOCK Y AVANCE ─────────── -->
+    <div id="tab-stock" class="panel">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Stock y Uso de Materiales</div>
+          <div class="section-sub">Compras vs. Uso vs. Metrado</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title">▸ REGISTRAR USO DE MATERIAL</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Partida</label>
+            <select id="u-partida">
+              <option value="">— Seleccionar partida —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Material</label>
+            <select id="u-material">
+              <option value="">— Seleccionar material —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Cantidad usada</label>
+            <input type="number" id="u-cantidad" placeholder="0" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="u-fecha">
+          </div>
+          <div class="form-group full">
+            <label>Observación</label>
+            <input type="text" id="u-obs" placeholder="Ej: Se usaron en zapatas del eje A">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="registrarUso()" style="margin-top:16px">REGISTRAR USO</button>
+      </div>
+
+      <div id="stock-cards"></div>
+    </div>
+
+    <!-- ─────────── PARTIDAS ─────────── -->
+    <div id="tab-partidas" class="panel">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Partidas de Obra</div>
+          <div class="section-sub">Metrado y control de avance</div>
+        </div>
+        <button class="btn-secondary" onclick="openModal('modal-nueva-partida')">+ Nueva Partida</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Partida</th>
+              <th>Material</th>
+              <th>Unidad</th>
+              <th>Metrado total</th>
+              <th>Comprado</th>
+              <th>Usado</th>
+              <th>Stock</th>
+              <th>Falta comprar</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="partidas-table">
+            <tr><td colspan="9" class="empty-state">Sin partidas registradas</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="uso-historial">
+        <hr class="divider">
+        <div class="section-title" style="font-size:20px;margin-bottom:16px">Historial de Uso</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Fecha</th><th>Partida</th><th>Material</th><th>Cantidad</th><th>Observación</th></tr>
+            </thead>
+            <tbody id="uso-table">
+              <tr><td colspan="5" class="empty-state">Sin registros</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<!-- ═══ MODAL: Nuevo Material ═══ -->
+<div class="modal-overlay" id="modal-nuevo-material">
+  <div class="modal">
+    <div class="modal-title">▸ NUEVO TIPO DE MATERIAL</div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Nombre del material</label>
+      <input type="text" id="nm-nombre" placeholder="Ej: Fierro 1/2, Cemento, Ladrillo...">
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Unidad de medida</label>
+      <select id="nm-unidad" onchange="checkOtraUnidad()">
+        <option value="m3">m³ (metros cúbicos)</option>
+        <option value="varillas">Varillas</option>
+        <option value="bolsas">Bolsas</option>
+        <option value="kg">Kg (kilogramos)</option>
+        <option value="piezas">Piezas</option>
+        <option value="m2">m² (metros cuadrados)</option>
+        <option value="ml">ml (metros lineales)</option>
+        <option value="galones">Galones</option>
+        <option value="otro">Otra unidad...</option>
+      </select>
+    </div>
+    <div class="form-group" id="nm-otra-wrap" style="margin-bottom:16px; display:none">
+      <label>Especificar unidad</label>
+      <input type="text" id="nm-otra" placeholder="Escribe la unidad">
+    </div>
+    <div style="display:flex; gap:12px; margin-top:8px">
+      <button class="btn-primary" onclick="crearMaterial()">GUARDAR MATERIAL</button>
+      <button class="btn-secondary" onclick="closeModal('modal-nuevo-material')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Nueva Partida ═══ -->
+<div class="modal-overlay" id="modal-nueva-partida">
+  <div class="modal">
+    <div class="modal-title">▸ NUEVA PARTIDA DE OBRA</div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Nombre de la partida</label>
+      <input type="text" id="np-nombre" placeholder="Ej: Zapatas, Muros perimetricos, Cobertura...">
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Material principal</label>
+      <select id="np-material">
+        <option value="">— Seleccionar —</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Metrado según planilla (cantidad total aprox.)</label>
+      <input type="number" id="np-metrado" placeholder="0" min="0" step="0.01">
+    </div>
+    <div style="display:flex; gap:12px; margin-top:8px">
+      <button class="btn-primary" onclick="crearPartida()">GUARDAR PARTIDA</button>
+      <button class="btn-secondary" onclick="closeModal('modal-nueva-partida')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONFIG & STATE
+// ═══════════════════════════════════════════════════════════════
+const MONTO_TOTAL = 79000;
+let API_URL = '';
+let API_PASS = '';
+let state = {
+  pagos: [],
+  materiales: [],
+  compras: [],
+  usos: [],
+  partidas: []
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+window.onload = () => {
+  const url = localStorage.getItem('obra_url');
+  const pass = localStorage.getItem('obra_pass');
+  if (url && pass) {
+    API_URL = url;
+    API_PASS = pass;
+    showApp();
+  }
+  // Set today's date on date fields
+  const today = new Date().toISOString().split('T')[0];
+  ['p-fecha','c-fecha','u-fecha'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  SETUP
+// ═══════════════════════════════════════════════════════════════
+async function conectar() {
+  const url = document.getElementById('cfg-url').value.trim();
+  const pass = document.getElementById('cfg-pass').value.trim();
+  if (!url || !pass) { toast('Completa los campos', 'error'); return; }
+
+  const btn = document.querySelector('.btn-connect');
+  btn.textContent = 'CONECTANDO...';
+  btn.disabled = true;
+
+  try {
+    const res = await apiCall('ping', { pass });
+    if (res.ok) {
+      API_URL = url;
+      API_PASS = pass;
+      localStorage.setItem('obra_url', url);
+      localStorage.setItem('obra_pass', pass);
+      showApp();
+    } else {
+      toast('Contraseña incorrecta o URL inválida', 'error');
+    }
+  } catch(e) {
+    toast('Error de conexión. Verifica la URL.', 'error');
+  } finally {
+    btn.textContent = 'CONECTAR →';
+    btn.disabled = false;
+  }
+}
+
+function desconectar() {
+  localStorage.removeItem('obra_url');
+  localStorage.removeItem('obra_pass');
+  API_URL = ''; API_PASS = '';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'flex';
+}
+
+function showApp() {
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadAll();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  API
+// ═══════════════════════════════════════════════════════════════
+async function apiCall(action, data = {}) {
+  const body = { action, pass: API_PASS, ...data };
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify(body)
+  });
+  return await res.json();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOAD ALL
+// ═══════════════════════════════════════════════════════════════
+async function loadAll() {
+  try {
+    const res = await apiCall('getAll');
+    if (!res.ok) { toast('Error al cargar datos', 'error'); return; }
+    state = res.data;
+    renderAll();
+  } catch(e) {
+    toast('Error de conexión', 'error');
+  }
+}
+
+function renderAll() {
+  renderDashboard();
+  renderPagos();
+  renderCompras();
+  renderStock();
+  renderPartidas();
+  populateSelects();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderDashboard() {
+  const totalPagado = state.pagos.reduce((s, p) => s + parseFloat(p.monto || 0), 0);
+  const saldo = MONTO_TOTAL - totalPagado;
+  const totalMateriales = state.compras.reduce((s, c) => s + parseFloat(c.costo || 0), 0);
+  const totalObra = totalPagado + totalMateriales;
+  const pct = Math.min(100, (totalPagado / MONTO_TOTAL) * 100);
+
+  document.getElementById('dash-saldo').innerHTML = `${fmt(saldo)}<small>S/</small>`;
+  document.getElementById('dash-pagado').textContent = `Pagado: S/ ${fmt(totalPagado)}`;
+  document.getElementById('bar-pagos').style.width = pct + '%';
+  document.getElementById('dash-materiales').innerHTML = `${fmt(totalMateriales)}<small>S/</small>`;
+  document.getElementById('dash-ncompras').textContent = `${state.compras.length} compras registradas`;
+  document.getElementById('dash-total').innerHTML = `${fmt(totalObra)}<small>S/</small>`;
+  document.getElementById('dash-tipos').textContent = state.materiales.length;
+  document.getElementById('dash-partidas').textContent = `${state.partidas.length} partidas registradas`;
+
+  // Stock table
+  const tbody = document.getElementById('dash-stock-table');
+  if (!state.materiales.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Sin materiales registrados</td></tr>';
+    return;
+  }
+  tbody.innerHTML = state.materiales.map(m => {
+    const comprado = state.compras.filter(c => c.material === m.nombre).reduce((s, c) => s + parseFloat(c.cantidad || 0), 0);
+    const usado = state.usos.filter(u => u.material === m.nombre).reduce((s, u) => s + parseFloat(u.cantidad || 0), 0);
+    const stock = comprado - usado;
+    const metrado = state.partidas.filter(p => p.material === m.nombre).reduce((s, p) => s + parseFloat(p.metrado || 0), 0);
+    const falta = Math.max(0, metrado - comprado);
+    let estadoTag = stock > 0
+      ? `<span class="tag tag-green">OK</span>`
+      : `<span class="tag tag-red">Sin stock</span>`;
+    if (falta > 0) estadoTag = `<span class="tag tag-yellow">Falta comprar ${fmtNum(falta)} ${m.unidad}</span>`;
+    return `<tr>
+      <td><strong>${m.nombre}</strong></td>
+      <td class="mono">${fmtNum(stock)} ${m.unidad}</td>
+      <td class="mono">${fmtNum(usado)} ${m.unidad}</td>
+      <td class="mono">${metrado ? fmtNum(metrado) + ' ' + m.unidad : '—'}</td>
+      <td>${estadoTag}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PAGOS
+// ═══════════════════════════════════════════════════════════════
+async function registrarPago() {
+  const fecha = document.getElementById('p-fecha').value;
+  const monto = parseFloat(document.getElementById('p-monto').value);
+  const desc = document.getElementById('p-desc').value.trim();
+  const notas = document.getElementById('p-notas').value.trim();
+
+  if (!fecha || !monto || monto <= 0) { toast('Completa fecha y monto', 'error'); return; }
+
+  const totalPagado = state.pagos.reduce((s, p) => s + parseFloat(p.monto || 0), 0);
+  const nuevoSaldo = MONTO_TOTAL - totalPagado - monto;
+  if (nuevoSaldo < 0) { toast(`Monto excede saldo disponible (S/ ${fmt(MONTO_TOTAL - totalPagado)})`, 'error'); return; }
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'GUARDANDO...';
+
+  try {
+    const res = await apiCall('addPago', { fecha, monto, desc, notas, saldo: nuevoSaldo });
+    if (res.ok) {
+      state.pagos = res.pagos;
+      renderPagos();
+      renderDashboard();
+      document.getElementById('p-monto').value = '';
+      document.getElementById('p-desc').value = '';
+      document.getElementById('p-notas').value = '';
+      toast('Pago registrado ✓', 'success');
+    } else toast(res.error || 'Error al guardar', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'REGISTRAR PAGO'; }
+}
+
+function renderPagos() {
+  const tbody = document.getElementById('pagos-table');
+  const totalPagado = state.pagos.reduce((s, p) => s + parseFloat(p.monto || 0), 0);
+  document.getElementById('p-saldo-preview').textContent = `S/ ${fmt(MONTO_TOTAL - totalPagado)}`;
+
+  if (!state.pagos.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Sin pagos registrados</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...state.pagos].reverse().map(p => `
+    <tr>
+      <td class="mono">${p.fecha}</td>
+      <td>${p.desc || '—'}</td>
+      <td class="mono" style="color:var(--accent2)"><strong>S/ ${fmt(p.monto)}</strong></td>
+      <td class="mono" style="color:var(--accent3)">S/ ${fmt(p.saldo)}</td>
+      <td style="color:var(--text-muted);font-size:12px">${p.notas || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  COMPRAS
+// ═══════════════════════════════════════════════════════════════
+let selectedPM = '';
+function selectPM(btn, metodo) {
+  document.querySelectorAll('.pm-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedPM = metodo;
+  document.getElementById('c-metodo').value = metodo;
+}
+
+async function crearMaterial() {
+  const nombre = document.getElementById('nm-nombre').value.trim();
+  const unidadSel = document.getElementById('nm-unidad').value;
+  const unidad = unidadSel === 'otro' ? document.getElementById('nm-otra').value.trim() : unidadSel;
+
+  if (!nombre || !unidad) { toast('Completa nombre y unidad', 'error'); return; }
+
+  try {
+    const res = await apiCall('addMaterial', { nombre, unidad });
+    if (res.ok) {
+      state.materiales = res.materiales;
+      populateSelects();
+      closeModal('modal-nuevo-material');
+      document.getElementById('nm-nombre').value = '';
+      toast('Material creado ✓', 'success');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+}
+
+function updateUnidad() {
+  const mat = state.materiales.find(m => m.nombre === document.getElementById('c-material').value);
+  document.getElementById('c-unidad').value = mat ? mat.unidad : '';
+}
+
+async function registrarCompra() {
+  const material = document.getElementById('c-material').value;
+  const fecha = document.getElementById('c-fecha').value;
+  const cantidad = parseFloat(document.getElementById('c-cantidad').value);
+  const costo = parseFloat(document.getElementById('c-costo').value);
+  const metodo = document.getElementById('c-metodo').value;
+  const proveedor = document.getElementById('c-proveedor').value.trim();
+  const notas = document.getElementById('c-notas').value.trim();
+  const unidad = document.getElementById('c-unidad').value;
+
+  if (!material || !fecha || !cantidad || !costo) { toast('Completa los campos obligatorios', 'error'); return; }
+  if (!metodo) { toast('Selecciona el método de pago', 'error'); return; }
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'GUARDANDO...';
+
+  try {
+    const res = await apiCall('addCompra', { material, fecha, cantidad, costo, metodo, proveedor, notas, unidad });
+    if (res.ok) {
+      state.compras = res.compras;
+      renderCompras(); renderDashboard(); renderStock(); renderPartidas();
+      document.getElementById('c-cantidad').value = '';
+      document.getElementById('c-costo').value = '';
+      document.getElementById('c-proveedor').value = '';
+      document.getElementById('c-notas').value = '';
+      selectedPM = '';
+      document.querySelectorAll('.pm-btn').forEach(b => b.classList.remove('selected'));
+      toast('Compra registrada ✓', 'success');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'REGISTRAR COMPRA'; }
+}
+
+function renderCompras() {
+  const tbody = document.getElementById('compras-table');
+  if (!state.compras.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Sin compras registradas</td></tr>';
+    return;
+  }
+  const pmColor = { 'Efectivo':'tag-green','Transferencia':'tag-blue','Tarjeta':'tag-yellow','Yape':'tag-gray' };
+  tbody.innerHTML = [...state.compras].reverse().map(c => `
+    <tr>
+      <td class="mono">${c.fecha}</td>
+      <td><strong>${c.material}</strong></td>
+      <td class="mono">${fmtNum(c.cantidad)}</td>
+      <td class="mono">${c.unidad}</td>
+      <td class="mono" style="color:var(--accent)">S/ ${fmt(c.costo)}</td>
+      <td><span class="tag ${pmColor[c.metodo]||'tag-gray'}">${c.metodo}</span></td>
+      <td>${c.proveedor || '—'}</td>
+      <td style="font-size:12px;color:var(--text-muted);max-width:150px">${c.notas || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  STOCK
+// ═══════════════════════════════════════════════════════════════
+async function registrarUso() {
+  const partida = document.getElementById('u-partida').value;
+  const material = document.getElementById('u-material').value;
+  const cantidad = parseFloat(document.getElementById('u-cantidad').value);
+  const fecha = document.getElementById('u-fecha').value;
+  const obs = document.getElementById('u-obs').value.trim();
+
+  if (!partida || !material || !cantidad || !fecha) { toast('Completa todos los campos', 'error'); return; }
+
+  // Check stock
+  const comprado = state.compras.filter(c => c.material === material).reduce((s, c) => s + parseFloat(c.cantidad || 0), 0);
+  const usado = state.usos.filter(u => u.material === material).reduce((s, u) => s + parseFloat(u.cantidad || 0), 0);
+  const stock = comprado - usado;
+  if (cantidad > stock) { toast(`Stock insuficiente. Disponible: ${fmtNum(stock)}`, 'error'); return; }
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'GUARDANDO...';
+
+  try {
+    const res = await apiCall('addUso', { partida, material, cantidad, fecha, obs });
+    if (res.ok) {
+      state.usos = res.usos;
+      renderStock(); renderDashboard(); renderPartidas();
+      document.getElementById('u-cantidad').value = '';
+      document.getElementById('u-obs').value = '';
+      toast('Uso registrado ✓', 'success');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'REGISTRAR USO'; }
+}
+
+function renderStock() {
+  const container = document.getElementById('stock-cards');
+  if (!state.materiales.length) {
+    container.innerHTML = '<div class="empty-state">Sin materiales registrados</div>';
+    return;
+  }
+  container.innerHTML = state.materiales.map(m => {
+    const comprado = state.compras.filter(c => c.material === m.nombre).reduce((s, c) => s + parseFloat(c.cantidad || 0), 0);
+    const usado = state.usos.filter(u => u.material === m.nombre).reduce((s, u) => s + parseFloat(u.cantidad || 0), 0);
+    const stock = comprado - usado;
+    const metrado = state.partidas.filter(p => p.material === m.nombre).reduce((s, p) => s + parseFloat(p.metrado || 0), 0);
+    const falta = Math.max(0, metrado - comprado);
+    const pctUso = comprado > 0 ? Math.min(100, (usado / comprado) * 100) : 0;
+    const cls = pctUso > 90 ? 'danger' : pctUso > 60 ? 'warn' : '';
+    const totalCosto = state.compras.filter(c => c.material === m.nombre).reduce((s, c) => s + parseFloat(c.costo || 0), 0);
+    return `
+      <div class="form-card" style="margin-bottom:16px;border-top-color:${cls==='danger'?'var(--accent2)':cls==='warn'?'var(--accent)':'var(--accent3)'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+          <div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px">${m.nombre}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px">${m.unidad}</div>
+          </div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <div style="text-align:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Comprado</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text)">${fmtNum(comprado)}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Usado</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent2)">${fmtNum(usado)}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Stock</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:${stock > 0 ? 'var(--accent3)' : 'var(--accent2)'}">${fmtNum(stock)}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Metrado</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--steel)">${metrado ? fmtNum(metrado) : '—'}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Falta comprar</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:${falta > 0 ? 'var(--accent)' : 'var(--accent3)'}">${fmtNum(falta)}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Invertido</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent)">S/${fmt(totalCosto)}</div>
+            </div>
+          </div>
+        </div>
+        <div class="stock-bar-wrap">
+          <div class="stock-bar-labels">
+            <span>Uso: ${pctUso.toFixed(0)}%</span>
+            <span>${fmtNum(usado)} / ${fmtNum(comprado)} ${m.unidad}</span>
+          </div>
+          <div class="stock-bar-bg"><div class="stock-bar-fill ${cls}" style="width:${pctUso}%"></div></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PARTIDAS
+// ═══════════════════════════════════════════════════════════════
+async function crearPartida() {
+  const nombre = document.getElementById('np-nombre').value.trim();
+  const material = document.getElementById('np-material').value;
+  const metrado = parseFloat(document.getElementById('np-metrado').value);
+
+  if (!nombre || !material || !metrado) { toast('Completa todos los campos', 'error'); return; }
+
+  try {
+    const mat = state.materiales.find(m => m.nombre === material);
+    const res = await apiCall('addPartida', { nombre, material, metrado, unidad: mat ? mat.unidad : '' });
+    if (res.ok) {
+      state.partidas = res.partidas;
+      renderPartidas(); renderDashboard(); renderStock();
+      closeModal('modal-nueva-partida');
+      document.getElementById('np-nombre').value = '';
+      document.getElementById('np-metrado').value = '';
+      toast('Partida creada ✓', 'success');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+}
+
+function renderPartidas() {
+  const tbody = document.getElementById('partidas-table');
+  if (!state.partidas.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Sin partidas registradas</td></tr>';
+  } else {
+    tbody.innerHTML = state.partidas.map(p => {
+      const comprado = state.compras.filter(c => c.material === p.material).reduce((s, c) => s + parseFloat(c.cantidad || 0), 0);
+      const usado = state.usos.filter(u => u.partida === p.nombre && u.material === p.material).reduce((s, u) => s + parseFloat(u.cantidad || 0), 0);
+      const stock = comprado - state.usos.filter(u => u.material === p.material).reduce((s, u) => s + parseFloat(u.cantidad || 0), 0);
+      const falta = Math.max(0, p.metrado - comprado);
+      const pct = p.metrado > 0 ? Math.min(100, (usado / p.metrado) * 100) : 0;
+      let estado;
+      if (pct >= 100) estado = `<span class="tag tag-green">Completo</span>`;
+      else if (pct > 0) estado = `<span class="tag tag-yellow">${pct.toFixed(0)}% avance</span>`;
+      else estado = `<span class="tag tag-gray">Sin iniciar</span>`;
+      return `<tr>
+        <td><strong>${p.nombre}</strong></td>
+        <td>${p.material}</td>
+        <td class="mono">${p.unidad}</td>
+        <td class="mono">${fmtNum(p.metrado)}</td>
+        <td class="mono">${fmtNum(comprado)}</td>
+        <td class="mono">${fmtNum(usado)}</td>
+        <td class="mono" style="color:${stock>0?'var(--accent3)':'var(--accent2)'}">${fmtNum(stock)}</td>
+        <td class="mono" style="color:${falta>0?'var(--accent)':'var(--accent3)'}">${fmtNum(falta)}</td>
+        <td>${estado}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Uso historial
+  const usoTbody = document.getElementById('uso-table');
+  if (!state.usos.length) {
+    usoTbody.innerHTML = '<tr><td colspan="5" class="empty-state">Sin registros</td></tr>';
+  } else {
+    usoTbody.innerHTML = [...state.usos].reverse().map(u => `
+      <tr>
+        <td class="mono">${u.fecha}</td>
+        <td>${u.partida}</td>
+        <td>${u.material}</td>
+        <td class="mono">${fmtNum(u.cantidad)}</td>
+        <td style="font-size:12px;color:var(--text-muted)">${u.obs || '—'}</td>
+      </tr>
+    `).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SELECTS
+// ═══════════════════════════════════════════════════════════════
+function populateSelects() {
+  const opts = state.materiales.map(m => `<option value="${m.nombre}">${m.nombre} (${m.unidad})</option>`).join('');
+  ['c-material','u-material','np-material'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      const prev = el.value;
+      el.innerHTML = `<option value="">— Seleccionar —</option>` + opts;
+      if (prev) el.value = prev;
+    }
+  });
+
+  const partOpts = state.partidas.map(p => `<option value="${p.nombre}">${p.nombre}</option>`).join('');
+  const uPartida = document.getElementById('u-partida');
+  if (uPartida) {
+    const prev = uPartida.value;
+    uPartida.innerHTML = `<option value="">— Seleccionar partida —</option>` + partOpts;
+    if (prev) uPartida.value = prev;
+  }
+
+  updateUnidad();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════════════
+function showTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'modal-nueva-partida') populateSelects();
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+function checkOtraUnidad() {
+  const wrap = document.getElementById('nm-otra-wrap');
+  wrap.style.display = document.getElementById('nm-unidad').value === 'otro' ? 'block' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════════
+function fmt(n) {
+  return parseFloat(n || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtNum(n) {
+  const v = parseFloat(n || 0);
+  return v % 1 === 0 ? v.toString() : v.toFixed(2);
+}
+
+function toast(msg, type = 'info', duration = 3500) {
+  const el = document.createElement('div');
+  el.className = `toast-item ${type}`;
+  el.innerHTML = `<span>${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span> ${msg}`;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), duration);
+}
+
+// Live saldo preview when typing pago amount
+document.addEventListener('DOMContentLoaded', () => {
+  const montoEl = document.getElementById('p-monto');
+  if (montoEl) {
+    montoEl.addEventListener('input', () => {
+      const totalPagado = state.pagos.reduce((s, p) => s + parseFloat(p.monto || 0), 0);
+      const monto = parseFloat(montoEl.value) || 0;
+      document.getElementById('p-saldo-preview').textContent = `S/ ${fmt(MONTO_TOTAL - totalPagado - monto)}`;
+    });
+  }
+});
+</script>
+</body>
+</html>
