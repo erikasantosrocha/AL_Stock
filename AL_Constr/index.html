@@ -589,6 +589,135 @@
   .avance-row:last-child { border-bottom: none; }
 
   .inline-actions { display: flex; gap: 8px; align-items: center; }
+
+  /* ── MULTI-ITEM COMPRA ROWS ── */
+  .c-items-header {
+    display: grid;
+    grid-template-columns: 2fr 110px 80px 140px 34px;
+    gap: 10px;
+    padding-bottom: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .compra-item-row {
+    display: grid;
+    grid-template-columns: 2fr 110px 80px 140px 34px;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .compra-item-row .form-group { margin: 0; gap: 0; }
+  .row-clear {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 28px;
+    height: 38px;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    transition: all .2s;
+    padding: 0;
+  }
+  .row-clear:hover { border-color: var(--accent2); color: var(--accent2); }
+  .total-preview-bar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 12px 0 16px;
+  }
+  .btn-edit {
+    background: transparent;
+    color: var(--steel);
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    font-size: 10px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all .2s;
+  }
+  .btn-edit:hover { border-color: var(--steel); color: var(--text); }
+
+  /* ── PARTIDA & USO MULTI-ITEM ROWS ── */
+  .partida-item-row {
+    display: grid;
+    grid-template-columns: 2fr 120px 34px;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .partida-item-row .form-group { margin: 0; gap: 0; }
+  .uso-item-row {
+    display: grid;
+    grid-template-columns: 2fr 130px 34px;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .uso-item-row .form-group { margin: 0; gap: 0; }
+  .pi-header {
+    display: grid;
+    grid-template-columns: 2fr 120px 34px;
+    gap: 10px;
+    padding-bottom: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .ui-header {
+    display: grid;
+    grid-template-columns: 2fr 130px 34px;
+    gap: 10px;
+    padding-bottom: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  @media (max-width: 700px) {
+    .partida-item-row, .uso-item-row {
+      grid-template-columns: 1fr 80px;
+      gap: 6px;
+      background: var(--surface2);
+      padding: 10px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+    }
+    .partida-item-row > .form-group:first-child,
+    .uso-item-row > .form-group:first-child { grid-column: 1 / -1; }
+    .pi-header, .ui-header { display: none; }
+  }
+  @media (max-width: 700px) {
+    .c-items-header { display: none; }
+    .compra-item-row {
+      grid-template-columns: 1fr 80px;
+      grid-template-rows: auto auto auto;
+      gap: 6px;
+      background: var(--surface2);
+      padding: 10px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+    }
+    .compra-item-row > .form-group:first-child { grid-column: 1 / -1; }
+    .row-clear { justify-self: end; }
+  }
 </style>
 </head>
 <body>
@@ -765,28 +894,10 @@
 
       <div class="form-card">
         <div class="form-title">▸ REGISTRAR COMPRA</div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Material</label>
-            <select id="c-material" onchange="updateUnidad()">
-              <option value="">— Seleccionar —</option>
-            </select>
-          </div>
+        <div class="form-grid" style="margin-bottom:20px">
           <div class="form-group">
             <label>Fecha de compra</label>
             <input type="date" id="c-fecha">
-          </div>
-          <div class="form-group">
-            <label>Cantidad</label>
-            <input type="number" id="c-cantidad" placeholder="0" min="0" step="0.01">
-          </div>
-          <div class="form-group">
-            <label>Unidad</label>
-            <input type="text" id="c-unidad" placeholder="m3, varillas, bolsas..." readonly style="background:var(--surface2);">
-          </div>
-          <div class="form-group">
-            <label>Costo total (S/)</label>
-            <input type="number" id="c-costo" placeholder="0.00" min="0" step="0.01">
           </div>
           <div class="form-group">
             <label>Proveedor</label>
@@ -803,11 +914,21 @@
             <input type="hidden" id="c-metodo">
           </div>
           <div class="form-group full">
-            <label>Notas del pago o adicionales</label>
+            <label>Notas / N° boleta / observaciones</label>
             <textarea id="c-notas" placeholder="N° operación, factura, observaciones..."></textarea>
           </div>
         </div>
-        <button class="btn-primary" onclick="registrarCompra()" style="margin-top:16px">REGISTRAR COMPRA</button>
+
+        <div class="c-items-header">
+          <span>Material</span><span>Cantidad</span><span>Unidad</span><span>Costo (S/)</span><span></span>
+        </div>
+        <div id="compra-items"></div>
+
+        <div class="total-preview-bar">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Total del lote</span>
+          <span id="c-total-preview" style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--accent)">S/ 0.00</span>
+        </div>
+        <button class="btn-primary" onclick="registrarCompra()">REGISTRAR COMPRA</button>
       </div>
 
       <div class="table-wrap">
@@ -822,10 +943,11 @@
               <th>Método</th>
               <th>Proveedor</th>
               <th>Notas</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="compras-table">
-            <tr><td colspan="8" class="empty-state">Sin compras registradas</td></tr>
+            <tr><td colspan="9" class="empty-state">Sin compras registradas</td></tr>
           </tbody>
         </table>
       </div>
@@ -842,7 +964,7 @@
 
       <div class="form-card">
         <div class="form-title">▸ REGISTRAR USO DE MATERIAL</div>
-        <div class="form-grid">
+        <div class="form-grid" style="margin-bottom:20px">
           <div class="form-group">
             <label>Partida</label>
             <select id="u-partida">
@@ -850,24 +972,18 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Material</label>
-            <select id="u-material">
-              <option value="">— Seleccionar material —</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Cantidad usada</label>
-            <input type="number" id="u-cantidad" placeholder="0" min="0" step="0.01">
-          </div>
-          <div class="form-group">
             <label>Fecha</label>
             <input type="date" id="u-fecha">
           </div>
           <div class="form-group full">
-            <label>Observación</label>
+            <label>Observación general (opcional)</label>
             <input type="text" id="u-obs" placeholder="Ej: Se usaron en zapatas del eje A">
           </div>
         </div>
+        <div class="ui-header">
+          <span>Material</span><span>Cantidad usada</span><span></span>
+        </div>
+        <div id="uso-items"></div>
         <button class="btn-primary" onclick="registrarUso()" style="margin-top:16px">REGISTRAR USO</button>
       </div>
 
@@ -897,10 +1013,11 @@
               <th>Stock</th>
               <th>Falta comprar</th>
               <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="partidas-table">
-            <tr><td colspan="9" class="empty-state">Sin partidas registradas</td></tr>
+            <tr><td colspan="10" class="empty-state">Sin partidas registradas</td></tr>
           </tbody>
         </table>
       </div>
@@ -959,25 +1076,100 @@
 
 <!-- ═══ MODAL: Nueva Partida ═══ -->
 <div class="modal-overlay" id="modal-nueva-partida">
-  <div class="modal">
-    <div class="modal-title">▸ NUEVA PARTIDA DE OBRA</div>
+  <div class="modal" style="max-width:640px">
+    <div class="modal-title">▸ PARTIDA DE OBRA</div>
+    <div class="form-group" style="margin-bottom:20px">
+      <label>Nombre de la partida <span style="color:var(--text-dim);font-size:10px;text-transform:none;letter-spacing:0">(escribe uno nuevo o selecciona existente para agregar materiales)</span></label>
+      <input type="text" id="np-nombre" placeholder="Ej: Zapatas, Muros perimetricos, Cobertura..." list="np-partidas-list" autocomplete="off">
+      <datalist id="np-partidas-list"></datalist>
+    </div>
+    <div class="pi-header">
+      <span>Material</span><span>Metrado</span><span></span>
+    </div>
+    <div id="partida-items"></div>
+    <div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap">
+      <button class="btn-primary" onclick="crearPartida()">GUARDAR PARTIDA</button>
+      <button class="btn-secondary" onclick="closeModal('modal-nueva-partida')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Editar Partida ═══ -->
+<div class="modal-overlay" id="modal-edit-partida">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title">▸ EDITAR ENTRADA DE PARTIDA</div>
+    <input type="hidden" id="edit-partida-idx">
     <div class="form-group" style="margin-bottom:16px">
       <label>Nombre de la partida</label>
-      <input type="text" id="np-nombre" placeholder="Ej: Zapatas, Muros perimetricos, Cobertura...">
+      <input type="text" id="edit-partida-nombre" placeholder="Nombre de la partida">
     </div>
     <div class="form-group" style="margin-bottom:16px">
-      <label>Material principal</label>
-      <select id="np-material">
+      <label>Material</label>
+      <select id="edit-partida-material">
         <option value="">— Seleccionar —</option>
       </select>
     </div>
     <div class="form-group" style="margin-bottom:16px">
-      <label>Metrado según planilla (cantidad total aprox.)</label>
-      <input type="number" id="np-metrado" placeholder="0" min="0" step="0.01">
+      <label>Metrado total</label>
+      <input type="number" id="edit-partida-metrado" min="0" step="0.01" placeholder="0">
     </div>
-    <div style="display:flex; gap:12px; margin-top:8px">
-      <button class="btn-primary" onclick="crearPartida()">GUARDAR PARTIDA</button>
-      <button class="btn-secondary" onclick="closeModal('modal-nueva-partida')">Cancelar</button>
+    <div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap">
+      <button class="btn-primary" onclick="confirmEditPartida()">GUARDAR CAMBIOS</button>
+      <button class="btn-secondary" onclick="closeModal('modal-edit-partida')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Editar Compra ═══ -->
+<div class="modal-overlay" id="modal-edit-compra">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-title">▸ EDITAR COMPRA</div>
+    <input type="hidden" id="edit-compra-idx">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Material</label>
+        <select id="edit-material" onchange="updateEditUnidad()">
+          <option value="">— Seleccionar —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="edit-fecha">
+      </div>
+      <div class="form-group">
+        <label>Cantidad</label>
+        <input type="number" id="edit-cantidad" min="0" step="0.01" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Unidad</label>
+        <input type="text" id="edit-unidad" readonly style="background:var(--surface2)">
+      </div>
+      <div class="form-group">
+        <label>Costo total (S/)</label>
+        <input type="number" id="edit-costo" min="0" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Proveedor</label>
+        <input type="text" id="edit-proveedor" placeholder="Nombre del proveedor">
+      </div>
+      <div class="form-group full">
+        <label>Método de pago</label>
+        <div class="payment-methods" id="edit-pm-buttons">
+          <button class="pm-btn" onclick="selectEditPM(this,'Efectivo')">💵 Efectivo</button>
+          <button class="pm-btn" onclick="selectEditPM(this,'Transferencia')">🏦 Transferencia</button>
+          <button class="pm-btn" onclick="selectEditPM(this,'Tarjeta')">💳 Tarjeta</button>
+          <button class="pm-btn" onclick="selectEditPM(this,'Yape')">📱 Yape</button>
+        </div>
+        <input type="hidden" id="edit-metodo">
+      </div>
+      <div class="form-group full">
+        <label>Notas</label>
+        <textarea id="edit-notas" placeholder="N° operación, factura, observaciones..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex; gap:12px; margin-top:20px; flex-wrap:wrap">
+      <button class="btn-primary" onclick="confirmEditCompra()">GUARDAR CAMBIOS</button>
+      <button class="btn-secondary" onclick="closeModal('modal-edit-compra')">Cancelar</button>
     </div>
   </div>
 </div>
@@ -1223,11 +1415,18 @@ function renderPagos() {
 //  COMPRAS
 // ═══════════════════════════════════════════════════════════════
 let selectedPM = '';
+let editSelectedPM = '';
 function selectPM(btn, metodo) {
-  document.querySelectorAll('.pm-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#pm-buttons .pm-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedPM = metodo;
   document.getElementById('c-metodo').value = metodo;
+}
+function selectEditPM(btn, metodo) {
+  document.querySelectorAll('#edit-pm-buttons .pm-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  editSelectedPM = metodo;
+  document.getElementById('edit-metodo').value = metodo;
 }
 
 async function crearMaterial() {
@@ -1249,40 +1448,50 @@ async function crearMaterial() {
   } catch(e) { toast('Error de conexión', 'error'); }
 }
 
-function updateUnidad() {
-  const mat = state.materiales.find(m => m.nombre === document.getElementById('c-material').value);
-  document.getElementById('c-unidad').value = mat ? mat.unidad : '';
-}
-
 async function registrarCompra() {
-  const material = document.getElementById('c-material').value;
   const fecha = document.getElementById('c-fecha').value;
-  const cantidad = parseFloat(document.getElementById('c-cantidad').value);
-  const costo = parseFloat(document.getElementById('c-costo').value);
-  const metodo = document.getElementById('c-metodo').value;
   const proveedor = document.getElementById('c-proveedor').value.trim();
+  const metodo = document.getElementById('c-metodo').value;
   const notas = document.getElementById('c-notas').value.trim();
-  const unidad = document.getElementById('c-unidad').value;
 
-  if (!material || !fecha || !cantidad || !costo) { toast('Completa los campos obligatorios', 'error'); return; }
+  if (!fecha) { toast('Selecciona la fecha de compra', 'error'); return; }
   if (!metodo) { toast('Selecciona el método de pago', 'error'); return; }
+
+  const rows = document.querySelectorAll('.compra-item-row');
+  const items = [];
+  rows.forEach(row => {
+    const mat = row.querySelector('.ci-material').value;
+    const cant = parseFloat(row.querySelector('.ci-cantidad').value);
+    const costo = parseFloat(row.querySelector('.ci-costo').value);
+    const unidad = row.querySelector('.ci-unidad').value;
+    if (mat && cant > 0 && costo > 0) items.push({ material: mat, cantidad: cant, costo, unidad });
+  });
+
+  if (!items.length) { toast('Agrega al menos un material con cantidad y costo', 'error'); return; }
 
   const btn = event.target;
   btn.disabled = true; btn.textContent = 'GUARDANDO...';
 
   try {
-    const res = await apiCall('addCompra', { material, fecha, cantidad, costo, metodo, proveedor, notas, unidad });
-    if (res.ok) {
-      state.compras = res.compras;
-      renderCompras(); renderDashboard(); renderStock(); renderPartidas();
-      document.getElementById('c-cantidad').value = '';
-      document.getElementById('c-costo').value = '';
-      document.getElementById('c-proveedor').value = '';
-      document.getElementById('c-notas').value = '';
-      selectedPM = '';
-      document.querySelectorAll('.pm-btn').forEach(b => b.classList.remove('selected'));
-      toast('Compra registrada ✓', 'success');
-    } else toast(res.error || 'Error', 'error');
+    for (const item of items) {
+      const res = await apiCall('addCompra', { ...item, fecha, proveedor, metodo, notas });
+      if (!res.ok) { toast(res.error || 'Error al guardar', 'error'); return; }
+      if (res.compras) state.compras = res.compras;
+    }
+    renderCompras(); renderDashboard(); renderStock(); renderPartidas();
+    rows.forEach(row => {
+      row.querySelector('.ci-material').value = '';
+      row.querySelector('.ci-cantidad').value = '';
+      row.querySelector('.ci-unidad').value = '';
+      row.querySelector('.ci-costo').value = '';
+    });
+    document.getElementById('c-proveedor').value = '';
+    document.getElementById('c-notas').value = '';
+    selectedPM = '';
+    document.querySelectorAll('#pm-buttons .pm-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('c-metodo').value = '';
+    updateTotalPreview();
+    toast(`${items.length} compra${items.length > 1 ? 's' : ''} registrada${items.length > 1 ? 's' : ''} ✓`, 'success');
   } catch(e) { toast('Error de conexión', 'error'); }
   finally { btn.disabled = false; btn.textContent = 'REGISTRAR COMPRA'; }
 }
@@ -1290,20 +1499,28 @@ async function registrarCompra() {
 function renderCompras() {
   const tbody = document.getElementById('compras-table');
   if (!state.compras.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Sin compras registradas</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Sin compras registradas</td></tr>';
     return;
   }
   const pmColor = { 'Efectivo':'tag-green','Transferencia':'tag-blue','Tarjeta':'tag-yellow','Yape':'tag-gray' };
-  tbody.innerHTML = [...state.compras].reverse().map(c => `
+  tbody.innerHTML = state.compras.map((c, origIdx) => ({ c, origIdx }))
+    .reverse()
+    .map(({ c, origIdx }) => `
     <tr>
       <td class="mono">${c.fecha}</td>
       <td><strong>${c.material}</strong></td>
       <td class="mono">${fmtNum(c.cantidad)}</td>
       <td class="mono">${c.unidad}</td>
       <td class="mono" style="color:var(--accent)">S/ ${fmt(c.costo)}</td>
-      <td><span class="tag ${pmColor[c.metodo]||'tag-gray'}">${c.metodo}</span></td>
+      <td><span class="tag ${pmColor[c.metodo]||'tag-gray'}">${c.metodo || '—'}</span></td>
       <td>${c.proveedor || '—'}</td>
       <td style="font-size:12px;color:var(--text-muted);max-width:150px">${c.notas || '—'}</td>
+      <td>
+        <div class="inline-actions">
+          <button class="btn-edit" onclick="openEditCompra(${origIdx})">Editar</button>
+          <button class="btn-danger" onclick="deleteCompra(${origIdx})">Eliminar</button>
+        </div>
+      </td>
     </tr>
   `).join('');
 }
@@ -1313,31 +1530,48 @@ function renderCompras() {
 // ═══════════════════════════════════════════════════════════════
 async function registrarUso() {
   const partida = document.getElementById('u-partida').value;
-  const material = document.getElementById('u-material').value;
-  const cantidad = parseFloat(document.getElementById('u-cantidad').value);
   const fecha = document.getElementById('u-fecha').value;
   const obs = document.getElementById('u-obs').value.trim();
 
-  if (!partida || !material || !cantidad || !fecha) { toast('Completa todos los campos', 'error'); return; }
+  if (!partida || !fecha) { toast('Selecciona la partida y la fecha', 'error'); return; }
 
-  // Check stock
-  const comprado = state.compras.filter(c => c.material === material).reduce((s, c) => s + parseFloat(c.cantidad || 0), 0);
-  const usado = state.usos.filter(u => u.material === material).reduce((s, u) => s + parseFloat(u.cantidad || 0), 0);
-  const stock = comprado - usado;
-  if (cantidad > stock) { toast(`Stock insuficiente. Disponible: ${fmtNum(stock)}`, 'error'); return; }
+  const rows = document.querySelectorAll('.uso-item-row');
+  const items = [];
+  rows.forEach(row => {
+    const mat = row.querySelector('.ui-material').value;
+    const cant = parseFloat(row.querySelector('.ui-cantidad').value);
+    if (mat && cant > 0) items.push({ material: mat, cantidad: cant });
+  });
+
+  if (!items.length) { toast('Agrega al menos un material con cantidad', 'error'); return; }
+
+  for (const item of items) {
+    const comprado = state.compras.filter(c => c.material === item.material).reduce((s, c) => s + parseFloat(c.cantidad || 0), 0);
+    const usado = state.usos.filter(u => u.material === item.material).reduce((s, u) => s + parseFloat(u.cantidad || 0), 0);
+    const stock = comprado - usado;
+    if (item.cantidad > stock) {
+      const matObj = state.materiales.find(m => m.nombre === item.material);
+      toast(`Stock insuficiente: ${item.material}. Disponible: ${fmtNum(stock)} ${matObj ? matObj.unidad : ''}`, 'error');
+      return;
+    }
+  }
 
   const btn = event.target;
   btn.disabled = true; btn.textContent = 'GUARDANDO...';
 
   try {
-    const res = await apiCall('addUso', { partida, material, cantidad, fecha, obs });
-    if (res.ok) {
-      state.usos = res.usos;
-      renderStock(); renderDashboard(); renderPartidas();
-      document.getElementById('u-cantidad').value = '';
-      document.getElementById('u-obs').value = '';
-      toast('Uso registrado ✓', 'success');
-    } else toast(res.error || 'Error', 'error');
+    for (const item of items) {
+      const res = await apiCall('addUso', { partida, ...item, fecha, obs });
+      if (!res.ok) { toast(res.error || 'Error', 'error'); return; }
+      if (res.usos) state.usos = res.usos;
+    }
+    renderStock(); renderDashboard(); renderPartidas();
+    rows.forEach(row => {
+      row.querySelector('.ui-material').value = '';
+      row.querySelector('.ui-cantidad').value = '';
+    });
+    document.getElementById('u-obs').value = '';
+    toast(`${items.length} uso${items.length > 1 ? 's' : ''} registrado${items.length > 1 ? 's' : ''} ✓`, 'success');
   } catch(e) { toast('Error de conexión', 'error'); }
   finally { btn.disabled = false; btn.textContent = 'REGISTRAR USO'; }
 }
@@ -1408,31 +1642,41 @@ function renderStock() {
 // ═══════════════════════════════════════════════════════════════
 async function crearPartida() {
   const nombre = document.getElementById('np-nombre').value.trim();
-  const material = document.getElementById('np-material').value;
-  const metrado = parseFloat(document.getElementById('np-metrado').value);
+  if (!nombre) { toast('Escribe el nombre de la partida', 'error'); return; }
 
-  if (!nombre || !material || !metrado) { toast('Completa todos los campos', 'error'); return; }
+  const rows = document.querySelectorAll('.partida-item-row');
+  const items = [];
+  rows.forEach(row => {
+    const mat = row.querySelector('.pi-material').value;
+    const metrado = parseFloat(row.querySelector('.pi-metrado').value);
+    if (mat && metrado > 0) {
+      const matObj = state.materiales.find(m => m.nombre === mat);
+      items.push({ material: mat, metrado, unidad: matObj ? matObj.unidad : '' });
+    }
+  });
+
+  if (!items.length) { toast('Agrega al menos un material con metrado', 'error'); return; }
 
   try {
-    const mat = state.materiales.find(m => m.nombre === material);
-    const res = await apiCall('addPartida', { nombre, material, metrado, unidad: mat ? mat.unidad : '' });
-    if (res.ok) {
-      state.partidas = res.partidas;
-      renderPartidas(); renderDashboard(); renderStock();
-      closeModal('modal-nueva-partida');
-      document.getElementById('np-nombre').value = '';
-      document.getElementById('np-metrado').value = '';
-      toast('Partida creada ✓', 'success');
-    } else toast(res.error || 'Error', 'error');
+    for (const item of items) {
+      const res = await apiCall('addPartida', { nombre, ...item });
+      if (!res.ok) { toast(res.error || 'Error', 'error'); return; }
+      if (res.partidas) state.partidas = res.partidas;
+    }
+    renderPartidas(); renderDashboard(); renderStock();
+    populateSelects();
+    closeModal('modal-nueva-partida');
+    document.getElementById('np-nombre').value = '';
+    toast(`Partida "${nombre}" guardada con ${items.length} material${items.length > 1 ? 'es' : ''} ✓`, 'success');
   } catch(e) { toast('Error de conexión', 'error'); }
 }
 
 function renderPartidas() {
   const tbody = document.getElementById('partidas-table');
   if (!state.partidas.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Sin partidas registradas</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Sin partidas registradas</td></tr>';
   } else {
-    tbody.innerHTML = state.partidas.map(p => {
+    tbody.innerHTML = state.partidas.map((p, origIdx) => {
       const comprado = state.compras.filter(c => c.material === p.material).reduce((s, c) => s + parseFloat(c.cantidad || 0), 0);
       const usado = state.usos.filter(u => u.partida === p.nombre && u.material === p.material).reduce((s, u) => s + parseFloat(u.cantidad || 0), 0);
       const stock = comprado - state.usos.filter(u => u.material === p.material).reduce((s, u) => s + parseFloat(u.cantidad || 0), 0);
@@ -1452,6 +1696,12 @@ function renderPartidas() {
         <td class="mono" style="color:${stock>0?'var(--accent3)':'var(--accent2)'}">${fmtNum(stock)}</td>
         <td class="mono" style="color:${falta>0?'var(--accent)':'var(--accent3)'}">${fmtNum(falta)}</td>
         <td>${estado}</td>
+        <td>
+          <div class="inline-actions">
+            <button class="btn-edit" onclick="openEditPartida(${origIdx})">Editar</button>
+            <button class="btn-danger" onclick="deletePartidaRow(${origIdx})">Eliminar</button>
+          </div>
+        </td>
       </tr>`;
     }).join('');
   }
@@ -1478,24 +1728,318 @@ function renderPartidas() {
 // ═══════════════════════════════════════════════════════════════
 function populateSelects() {
   const opts = state.materiales.map(m => `<option value="${m.nombre}">${m.nombre} (${m.unidad})</option>`).join('');
-  ['c-material','u-material','np-material'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      const prev = el.value;
-      el.innerHTML = `<option value="">— Seleccionar —</option>` + opts;
-      if (prev) el.value = prev;
-    }
+
+  // Compra item rows
+  document.querySelectorAll('.ci-material').forEach(sel => {
+    const prev = sel.value;
+    sel.innerHTML = `<option value="">— Material —</option>` + opts;
+    if (prev) sel.value = prev;
   });
 
-  const partOpts = state.partidas.map(p => `<option value="${p.nombre}">${p.nombre}</option>`).join('');
+  // Uso item rows
+  document.querySelectorAll('.ui-material').forEach(sel => {
+    const prev = sel.value;
+    sel.innerHTML = `<option value="">— Material —</option>` + opts;
+    if (prev) sel.value = prev;
+  });
+
+  // Partida item rows (modal)
+  document.querySelectorAll('.pi-material').forEach(sel => {
+    const prev = sel.value;
+    sel.innerHTML = `<option value="">— Material —</option>` + opts;
+    if (prev) sel.value = prev;
+  });
+
+  // Edit partida modal material select
+  const editPartidaMat = document.getElementById('edit-partida-material');
+  if (editPartidaMat) {
+    const prev = editPartidaMat.value;
+    editPartidaMat.innerHTML = `<option value="">— Seleccionar —</option>` + opts;
+    if (prev) editPartidaMat.value = prev;
+  }
+
+  // Initialize rows once data is loaded
+  if (!document.querySelector('.compra-item-row')) initCompraRows();
+  if (!document.querySelector('.uso-item-row')) initUsoRows();
+
+  // Datalist for existing partida names
+  const datalist = document.getElementById('np-partidas-list');
+  if (datalist) {
+    const uniqueNames = [...new Set(state.partidas.map(p => p.nombre))];
+    datalist.innerHTML = uniqueNames.map(n => `<option value="${n}">`).join('');
+  }
+
+  const partOpts = [...new Set(state.partidas.map(p => p.nombre))].map(n => `<option value="${n}">${n}</option>`).join('');
   const uPartida = document.getElementById('u-partida');
   if (uPartida) {
     const prev = uPartida.value;
     uPartida.innerHTML = `<option value="">— Seleccionar partida —</option>` + partOpts;
     if (prev) uPartida.value = prev;
   }
+}
 
-  updateUnidad();
+// ═══════════════════════════════════════════════════════════════
+//  PARTIDA MULTI-ITEM ROWS
+// ═══════════════════════════════════════════════════════════════
+function initPartidaRows() {
+  const container = document.getElementById('partida-items');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 0; i < 5; i++) addPartidaRow();
+}
+
+function addPartidaRow() {
+  const container = document.getElementById('partida-items');
+  if (!container) return;
+  const opts = state.materiales.map(m => `<option value="${m.nombre}">${m.nombre} (${m.unidad})</option>`).join('');
+  const row = document.createElement('div');
+  row.className = 'partida-item-row';
+  row.innerHTML = `
+    <div class="form-group" style="min-width:0">
+      <select class="pi-material">
+        <option value="">— Material —</option>${opts}
+      </select>
+    </div>
+    <div class="form-group">
+      <input type="number" class="pi-metrado" placeholder="0" min="0" step="0.01">
+    </div>
+    <button class="row-clear" onclick="clearPartidaRow(this)" title="Limpiar">×</button>
+  `;
+  container.appendChild(row);
+}
+
+function clearPartidaRow(btn) {
+  const row = btn.closest('.partida-item-row');
+  row.querySelector('.pi-material').value = '';
+  row.querySelector('.pi-metrado').value = '';
+}
+
+// ── EDIT & DELETE PARTIDA ──
+function openEditPartida(idx) {
+  const p = state.partidas[idx];
+  if (!p) return;
+  document.getElementById('edit-partida-idx').value = idx;
+  document.getElementById('edit-partida-nombre').value = p.nombre;
+  document.getElementById('edit-partida-metrado').value = p.metrado;
+
+  const matSel = document.getElementById('edit-partida-material');
+  const opts = state.materiales.map(m => `<option value="${m.nombre}">${m.nombre} (${m.unidad})</option>`).join('');
+  matSel.innerHTML = `<option value="">— Seleccionar —</option>${opts}`;
+  matSel.value = p.material;
+
+  openModal('modal-edit-partida');
+}
+
+async function confirmEditPartida() {
+  const idx = parseInt(document.getElementById('edit-partida-idx').value);
+  const nombre = document.getElementById('edit-partida-nombre').value.trim();
+  const material = document.getElementById('edit-partida-material').value;
+  const metrado = parseFloat(document.getElementById('edit-partida-metrado').value);
+
+  if (!nombre || !material || !metrado) { toast('Completa todos los campos', 'error'); return; }
+
+  const mat = state.materiales.find(m => m.nombre === material);
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'GUARDANDO...';
+
+  try {
+    const res = await apiCall('editPartida', { index: idx, nombre, material, metrado, unidad: mat ? mat.unidad : '' });
+    if (res.ok) {
+      state.partidas = res.partidas;
+      renderPartidas(); renderDashboard(); renderStock();
+      populateSelects();
+      closeModal('modal-edit-partida');
+      toast('Partida actualizada ✓', 'success');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'GUARDAR CAMBIOS'; }
+}
+
+async function deletePartidaRow(idx) {
+  const p = state.partidas[idx];
+  if (!p) return;
+  if (!confirm(`¿Eliminar esta entrada?\n\nPartida: ${p.nombre}\nMaterial: ${p.material}\nMetrado: ${fmtNum(p.metrado)}`)) return;
+
+  try {
+    const res = await apiCall('deletePartida', { index: idx });
+    if (res.ok) {
+      state.partidas = res.partidas;
+      renderPartidas(); renderDashboard(); renderStock();
+      populateSelects();
+      toast('Entrada eliminada', 'info');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  USO MULTI-ITEM ROWS
+// ═══════════════════════════════════════════════════════════════
+function initUsoRows() {
+  const container = document.getElementById('uso-items');
+  if (!container || container.children.length > 0) return;
+  for (let i = 0; i < 5; i++) addUsoRow();
+}
+
+function addUsoRow() {
+  const container = document.getElementById('uso-items');
+  if (!container) return;
+  const opts = state.materiales.map(m => `<option value="${m.nombre}">${m.nombre} (${m.unidad})</option>`).join('');
+  const row = document.createElement('div');
+  row.className = 'uso-item-row';
+  row.innerHTML = `
+    <div class="form-group" style="min-width:0">
+      <select class="ui-material">
+        <option value="">— Material —</option>${opts}
+      </select>
+    </div>
+    <div class="form-group">
+      <input type="number" class="ui-cantidad" placeholder="0" min="0" step="0.01">
+    </div>
+    <button class="row-clear" onclick="clearUsoRow(this)" title="Limpiar">×</button>
+  `;
+  container.appendChild(row);
+}
+
+function clearUsoRow(btn) {
+  const row = btn.closest('.uso-item-row');
+  row.querySelector('.ui-material').value = '';
+  row.querySelector('.ui-cantidad').value = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  COMPRA MULTI-ITEM ROWS
+// ═══════════════════════════════════════════════════════════════
+function initCompraRows() {
+  const container = document.getElementById('compra-items');
+  if (!container || container.children.length > 0) return;
+  for (let i = 0; i < 4; i++) addCompraRow();
+}
+
+function addCompraRow() {
+  const container = document.getElementById('compra-items');
+  if (!container) return;
+  const opts = state.materiales.map(m => `<option value="${m.nombre}">${m.nombre} (${m.unidad})</option>`).join('');
+  const row = document.createElement('div');
+  row.className = 'compra-item-row';
+  row.innerHTML = `
+    <div class="form-group" style="min-width:0">
+      <select class="ci-material" onchange="updateRowUnidad(this);updateTotalPreview()">
+        <option value="">— Material —</option>${opts}
+      </select>
+    </div>
+    <div class="form-group">
+      <input type="number" class="ci-cantidad" placeholder="0" min="0" step="0.01" oninput="updateTotalPreview()">
+    </div>
+    <div class="form-group">
+      <input type="text" class="ci-unidad" placeholder="—" readonly style="background:var(--surface2)">
+    </div>
+    <div class="form-group">
+      <input type="number" class="ci-costo" placeholder="0.00" min="0" step="0.01" oninput="updateTotalPreview()">
+    </div>
+    <button class="row-clear" onclick="clearRow(this)" title="Limpiar fila">×</button>
+  `;
+  container.appendChild(row);
+}
+
+function updateRowUnidad(sel) {
+  const mat = state.materiales.find(m => m.nombre === sel.value);
+  sel.closest('.compra-item-row').querySelector('.ci-unidad').value = mat ? mat.unidad : '';
+}
+
+function clearRow(btn) {
+  const row = btn.closest('.compra-item-row');
+  row.querySelector('.ci-material').value = '';
+  row.querySelector('.ci-cantidad').value = '';
+  row.querySelector('.ci-unidad').value = '';
+  row.querySelector('.ci-costo').value = '';
+  updateTotalPreview();
+}
+
+function updateTotalPreview() {
+  let total = 0;
+  document.querySelectorAll('.compra-item-row').forEach(row => {
+    total += parseFloat(row.querySelector('.ci-costo').value) || 0;
+  });
+  const el = document.getElementById('c-total-preview');
+  if (el) el.textContent = `S/ ${fmt(total)}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EDIT & DELETE COMPRA
+// ═══════════════════════════════════════════════════════════════
+function openEditCompra(idx) {
+  const c = state.compras[idx];
+  if (!c) return;
+  document.getElementById('edit-compra-idx').value = idx;
+
+  const matSel = document.getElementById('edit-material');
+  const opts = state.materiales.map(m => `<option value="${m.nombre}">${m.nombre} (${m.unidad})</option>`).join('');
+  matSel.innerHTML = `<option value="">— Seleccionar —</option>${opts}`;
+  matSel.value = c.material;
+
+  document.getElementById('edit-fecha').value = c.fecha;
+  document.getElementById('edit-cantidad').value = c.cantidad;
+  document.getElementById('edit-unidad').value = c.unidad;
+  document.getElementById('edit-costo').value = c.costo;
+  document.getElementById('edit-proveedor').value = c.proveedor || '';
+  document.getElementById('edit-notas').value = c.notas || '';
+
+  editSelectedPM = c.metodo || '';
+  document.getElementById('edit-metodo').value = editSelectedPM;
+  document.querySelectorAll('#edit-pm-buttons .pm-btn').forEach(b => {
+    b.classList.toggle('selected', (b.getAttribute('onclick') || '').includes(`'${editSelectedPM}'`));
+  });
+
+  openModal('modal-edit-compra');
+}
+
+function updateEditUnidad() {
+  const mat = state.materiales.find(m => m.nombre === document.getElementById('edit-material').value);
+  document.getElementById('edit-unidad').value = mat ? mat.unidad : '';
+}
+
+async function confirmEditCompra() {
+  const idx = parseInt(document.getElementById('edit-compra-idx').value);
+  const material = document.getElementById('edit-material').value;
+  const fecha = document.getElementById('edit-fecha').value;
+  const cantidad = parseFloat(document.getElementById('edit-cantidad').value);
+  const costo = parseFloat(document.getElementById('edit-costo').value);
+  const proveedor = document.getElementById('edit-proveedor').value.trim();
+  const metodo = document.getElementById('edit-metodo').value;
+  const notas = document.getElementById('edit-notas').value.trim();
+  const unidad = document.getElementById('edit-unidad').value;
+
+  if (!material || !fecha || !cantidad || !costo) { toast('Completa los campos obligatorios', 'error'); return; }
+  if (!metodo) { toast('Selecciona el método de pago', 'error'); return; }
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'GUARDANDO...';
+
+  try {
+    const res = await apiCall('editCompra', { index: idx, material, fecha, cantidad, costo, proveedor, metodo, notas, unidad });
+    if (res.ok) {
+      state.compras = res.compras;
+      renderCompras(); renderDashboard(); renderStock(); renderPartidas();
+      closeModal('modal-edit-compra');
+      toast('Compra actualizada ✓', 'success');
+    } else toast(res.error || 'Error al guardar', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'GUARDAR CAMBIOS'; }
+}
+
+async function deleteCompra(idx) {
+  const c = state.compras[idx];
+  if (!c) return;
+  if (!confirm(`¿Eliminar esta compra?\n\n${c.material}  ·  ${fmtNum(c.cantidad)} ${c.unidad}\nS/ ${fmt(c.costo)}  ·  ${c.fecha}`)) return;
+
+  try {
+    const res = await apiCall('deleteCompra', { index: idx });
+    if (res.ok) {
+      state.compras = res.compras;
+      renderCompras(); renderDashboard(); renderStock(); renderPartidas();
+      toast('Compra eliminada', 'info');
+    } else toast(res.error || 'Error al eliminar', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1513,7 +2057,7 @@ function showTab(tab) {
 // ═══════════════════════════════════════════════════════════════
 function openModal(id) {
   document.getElementById(id).classList.add('open');
-  if (id === 'modal-nueva-partida') populateSelects();
+  if (id === 'modal-nueva-partida') { populateSelects(); initPartidaRows(); }
 }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(el => {
