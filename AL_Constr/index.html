@@ -1025,25 +1025,47 @@ window.onload = () => {
 async function conectar() {
   const url = document.getElementById('cfg-url').value.trim();
   const pass = document.getElementById('cfg-pass').value.trim();
-  if (!url || !pass) { toast('Completa los campos', 'error'); return; }
+
+  if (!url || !pass) {
+    toast('Completa los campos', 'error');
+    return;
+  }
 
   const btn = document.querySelector('.btn-connect');
   btn.textContent = 'CONECTANDO...';
   btn.disabled = true;
 
   try {
-    const res = await apiCall('ping', { pass });
+
+    // TEST DIRECTO usando la URL ingresada
+    const response = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'ping',
+        pass: pass
+      })
+    });
+
+    const res = await response.json();
+
     if (res.ok) {
+
       API_URL = url;
       API_PASS = pass;
+
       localStorage.setItem('obra_url', url);
       localStorage.setItem('obra_pass', pass);
+
       showApp();
+
     } else {
       toast('Contraseña incorrecta o URL inválida', 'error');
     }
+
   } catch(e) {
+    console.error(e);
     toast('Error de conexión. Verifica la URL.', 'error');
+
   } finally {
     btn.textContent = 'CONECTAR →';
     btn.disabled = false;
