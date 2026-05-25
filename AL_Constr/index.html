@@ -1843,7 +1843,9 @@ async function confirmEditPartida() {
   btn.disabled = true; btn.textContent = 'GUARDANDO...';
 
   try {
-    const res = await apiCall('editPartida', { index: idx, nombre, material, metrado, unidad: mat ? mat.unidad : '' });
+    const id = state.partidas[idx] ? state.partidas[idx].id : null;
+    if (!id) { toast('No se encontró el registro', 'error'); return; }
+    const res = await apiCall('editPartida', { id, nombre, material, metrado, unidad: mat ? mat.unidad : '' });
     if (res.ok) {
       state.partidas = res.partidas;
       renderPartidas(); renderDashboard(); renderStock();
@@ -1861,7 +1863,7 @@ async function deletePartidaRow(idx) {
   if (!confirm(`¿Eliminar esta entrada?\n\nPartida: ${p.nombre}\nMaterial: ${p.material}\nMetrado: ${fmtNum(p.metrado)}`)) return;
 
   try {
-    const res = await apiCall('deletePartida', { index: idx });
+    const res = await apiCall('deletePartida', { id: p.id });
     if (res.ok) {
       state.partidas = res.partidas;
       renderPartidas(); renderDashboard(); renderStock();
@@ -2016,7 +2018,9 @@ async function confirmEditCompra() {
   btn.disabled = true; btn.textContent = 'GUARDANDO...';
 
   try {
-    const res = await apiCall('editCompra', { index: idx, material, fecha, cantidad, costo, proveedor, metodo, notas, unidad });
+    const id = state.compras[idx] ? state.compras[idx].id : null;
+    if (!id) { toast('No se encontró el registro', 'error'); return; }
+    const res = await apiCall('editCompra', { id, material, fecha, cantidad, costo, proveedor, metodo, notas, unidad });
     if (res.ok) {
       state.compras = res.compras;
       renderCompras(); renderDashboard(); renderStock(); renderPartidas();
@@ -2033,7 +2037,7 @@ async function deleteCompra(idx) {
   if (!confirm(`¿Eliminar esta compra?\n\n${c.material}  ·  ${fmtNum(c.cantidad)} ${c.unidad}\nS/ ${fmt(c.costo)}  ·  ${c.fecha}`)) return;
 
   try {
-    const res = await apiCall('deleteCompra', { index: idx });
+    const res = await apiCall('deleteCompra', { id: c.id });
     if (res.ok) {
       state.compras = res.compras;
       renderCompras(); renderDashboard(); renderStock(); renderPartidas();
