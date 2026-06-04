@@ -718,6 +718,9 @@
     .compra-item-row > .form-group:first-child { grid-column: 1 / -1; }
     .row-clear { justify-self: end; }
   }
+  .th-sortable { cursor: pointer; user-select: none; }
+  .th-sortable:hover { color: var(--text); }
+  .sort-icon { font-size: 9px; color: var(--text-dim); margin-left: 3px; }
 </style>
 </head>
 <body>
@@ -880,6 +883,54 @@
           </tbody>
         </table>
       </div>
+
+      <hr class="divider">
+
+      <div class="section-header" style="margin-bottom:20px">
+        <div>
+          <div class="section-title" style="font-size:22px">Adicionales</div>
+          <div class="section-sub">Ajustes + / − al finalizar la obra</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px">Balance adicionales</div>
+          <div id="adicionales-total" style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--accent)">S/ 0.00</div>
+        </div>
+      </div>
+
+      <div class="form-card" style="border-top-color:var(--steel)">
+        <div class="form-title" style="color:var(--steel)">▸ REGISTRAR ADICIONAL</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="a-fecha">
+          </div>
+          <div class="form-group">
+            <label>Monto (S/) — negativo si es descuento</label>
+            <input type="number" id="a-monto" placeholder="Ej: 500 o -200" step="0.01">
+          </div>
+          <div class="form-group full">
+            <label>Descripción</label>
+            <input type="text" id="a-desc" placeholder="Ej: Trabajo extra en techo, Descuento por demora...">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="registrarAdicional()" style="margin-top:16px;background:var(--steel)">REGISTRAR ADICIONAL</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Descripción</th>
+              <th>Monto (S/)</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="adicionales-table">
+            <tr><td colspan="4" class="empty-state">Sin adicionales registrados</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- ─────────── COMPRAS ─────────── -->
@@ -889,7 +940,10 @@
           <div class="section-title">Compras de Materiales</div>
           <div class="section-sub">Registro de adquisiciones</div>
         </div>
-        <button class="btn-secondary" onclick="openModal('modal-nuevo-material')">+ Nuevo Material</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn-secondary" onclick="openGestionarMateriales()">Gestionar Materiales</button>
+          <button class="btn-secondary" onclick="openModal('modal-nuevo-material')">+ Nuevo Material</button>
+        </div>
       </div>
 
       <div class="form-card">
@@ -933,16 +987,16 @@
 
       <div class="table-wrap">
         <table>
-          <thead>
+          <thead id="compras-thead">
             <tr>
-              <th>Fecha</th>
-              <th>Material</th>
+              <th class="th-sortable" data-col="fecha" onclick="sortCompras('fecha')">Fecha <span class="sort-icon">⇅</span></th>
+              <th class="th-sortable" data-col="material" onclick="sortCompras('material')">Material <span class="sort-icon">⇅</span></th>
               <th>Cantidad</th>
               <th>Unidad</th>
               <th>Costo (S/)</th>
-              <th>Método</th>
-              <th>Proveedor</th>
-              <th>Notas</th>
+              <th class="th-sortable" data-col="metodo" onclick="sortCompras('metodo')">Método <span class="sort-icon">⇅</span></th>
+              <th class="th-sortable" data-col="proveedor" onclick="sortCompras('proveedor')">Proveedor <span class="sort-icon">⇅</span></th>
+              <th class="th-sortable" data-col="notas" onclick="sortCompras('notas')">Notas <span class="sort-icon">⇅</span></th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -1174,6 +1228,33 @@
   </div>
 </div>
 
+<!-- ═══ MODAL: Gestionar Materiales ═══ -->
+<div class="modal-overlay" id="modal-gestionar-materiales">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">▸ GESTIONAR MATERIALES</div>
+    <div id="gm-list" style="max-height:400px;overflow-y:auto"></div>
+    <div style="margin-top:20px">
+      <button class="btn-secondary" onclick="closeModal('modal-gestionar-materiales')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Renombrar Material ═══ -->
+<div class="modal-overlay" id="modal-edit-material">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">▸ RENOMBRAR MATERIAL</div>
+    <input type="hidden" id="edit-mat-idx">
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Nuevo nombre</label>
+      <input type="text" id="edit-mat-nombre" placeholder="Nombre del material">
+    </div>
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <button class="btn-primary" onclick="confirmEditMaterial()">GUARDAR</button>
+      <button class="btn-secondary" onclick="closeModal('modal-edit-material')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast container -->
 <div id="toast"></div>
 
@@ -1189,7 +1270,8 @@ let state = {
   materiales: [],
   compras: [],
   usos: [],
-  partidas: []
+  partidas: [],
+  adicionales: []
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -1205,7 +1287,7 @@ window.onload = () => {
   }
   // Set today's date on date fields
   const today = new Date().toISOString().split('T')[0];
-  ['p-fecha','c-fecha','u-fecha'].forEach(id => {
+  ['p-fecha','c-fecha','u-fecha','a-fecha'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = today;
   });
@@ -1298,6 +1380,7 @@ async function loadAll() {
     const res = await apiCall('getAll');
     if (!res.ok) { toast('Error al cargar datos', 'error'); return; }
     state = res.data;
+    if (!state.adicionales) state.adicionales = [];
     renderAll();
   } catch(e) {
     toast('Error de conexión', 'error');
@@ -1310,6 +1393,7 @@ function renderAll() {
   renderCompras();
   renderStock();
   renderPartidas();
+  renderAdicionales();
   populateSelects();
 }
 
@@ -1496,16 +1580,40 @@ async function registrarCompra() {
   finally { btn.disabled = false; btn.textContent = 'REGISTRAR COMPRA'; }
 }
 
+let comprasSort = { col: null, dir: 1 };
+
+function sortCompras(col) {
+  if (comprasSort.col === col) comprasSort.dir *= -1;
+  else { comprasSort.col = col; comprasSort.dir = 1; }
+  renderCompras();
+}
+
+function updateComprasSortIcons() {
+  document.querySelectorAll('#compras-thead th[data-col]').forEach(th => {
+    const icon = th.querySelector('.sort-icon');
+    if (icon) icon.textContent = comprasSort.col === th.dataset.col ? (comprasSort.dir === 1 ? '↑' : '↓') : '⇅';
+  });
+}
+
 function renderCompras() {
   const tbody = document.getElementById('compras-table');
   if (!state.compras.length) {
     tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Sin compras registradas</td></tr>';
+    updateComprasSortIcons();
     return;
   }
+  let sorted = state.compras.map((c, origIdx) => ({ c, origIdx }));
+  if (comprasSort.col) {
+    sorted.sort((a, b) => {
+      const va = String(a.c[comprasSort.col] || '').toLowerCase();
+      const vb = String(b.c[comprasSort.col] || '').toLowerCase();
+      return comprasSort.dir * va.localeCompare(vb);
+    });
+  } else {
+    sorted = sorted.reverse();
+  }
   const pmColor = { 'Efectivo':'tag-green','Transferencia':'tag-blue','Tarjeta':'tag-yellow','Yape':'tag-gray' };
-  tbody.innerHTML = state.compras.map((c, origIdx) => ({ c, origIdx }))
-    .reverse()
-    .map(({ c, origIdx }) => `
+  tbody.innerHTML = sorted.map(({ c, origIdx }) => `
     <tr>
       <td class="mono">${c.fecha}</td>
       <td><strong>${c.material}</strong></td>
@@ -1523,6 +1631,7 @@ function renderCompras() {
       </td>
     </tr>
   `).join('');
+  updateComprasSortIcons();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2044,6 +2153,163 @@ async function deleteCompra(idx) {
       toast('Compra eliminada', 'info');
     } else toast(res.error || 'Error al eliminar', 'error');
   } catch(e) { toast('Error de conexión', 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GESTIONAR MATERIALES
+// ═══════════════════════════════════════════════════════════════
+function openGestionarMateriales() {
+  renderGmList();
+  openModal('modal-gestionar-materiales');
+}
+
+function renderGmList() {
+  const container = document.getElementById('gm-list');
+  if (!state.materiales.length) {
+    container.innerHTML = '<div class="empty-state" style="padding:20px 0">Sin materiales registrados</div>';
+    return;
+  }
+  container.innerHTML = state.materiales.map((m, idx) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1">
+        <span style="font-weight:500">${m.nombre}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);margin-left:8px">${m.unidad}</span>
+      </div>
+      <div class="inline-actions">
+        <button class="btn-edit" onclick="openEditMaterial(${idx})">Renombrar</button>
+        <button class="btn-danger" onclick="deleteMaterial(${idx})">Eliminar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openEditMaterial(idx) {
+  const m = state.materiales[idx];
+  if (!m) return;
+  document.getElementById('edit-mat-idx').value = idx;
+  document.getElementById('edit-mat-nombre').value = m.nombre;
+  openModal('modal-edit-material');
+}
+
+async function confirmEditMaterial() {
+  const idx = parseInt(document.getElementById('edit-mat-idx').value);
+  const m = state.materiales[idx];
+  if (!m) return;
+  const newName = document.getElementById('edit-mat-nombre').value.trim();
+  if (!newName) { toast('El nombre no puede estar vacío', 'error'); return; }
+  if (newName === m.nombre) { closeModal('modal-edit-material'); return; }
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'GUARDANDO...';
+
+  try {
+    const res = await apiCall('editMaterial', { id: m.id, nombre: newName });
+    if (res.ok) {
+      state.materiales = res.materiales;
+      closeModal('modal-edit-material');
+      renderGmList();
+      populateSelects();
+      renderCompras(); renderStock(); renderDashboard(); renderPartidas();
+      toast('Material renombrado ✓', 'success');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'GUARDAR'; }
+}
+
+async function deleteMaterial(idx) {
+  const m = state.materiales[idx];
+  if (!m) return;
+  const inUse = state.compras.some(c => c.material === m.nombre) ||
+                state.usos.some(u => u.material === m.nombre) ||
+                state.partidas.some(p => p.material === m.nombre);
+  if (inUse) {
+    toast(`No se puede eliminar "${m.nombre}": tiene compras, usos o partidas asociadas`, 'error');
+    return;
+  }
+  if (!confirm(`¿Eliminar el material "${m.nombre}"?`)) return;
+
+  try {
+    const res = await apiCall('deleteMaterial', { id: m.id });
+    if (res.ok) {
+      state.materiales = res.materiales;
+      renderGmList();
+      populateSelects();
+      renderDashboard();
+      toast('Material eliminado', 'info');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADICIONALES
+// ═══════════════════════════════════════════════════════════════
+async function registrarAdicional() {
+  const fecha = document.getElementById('a-fecha').value;
+  const desc = document.getElementById('a-desc').value.trim();
+  const monto = parseFloat(document.getElementById('a-monto').value);
+
+  if (!fecha || !desc || isNaN(monto)) { toast('Completa todos los campos', 'error'); return; }
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'GUARDANDO...';
+
+  try {
+    const res = await apiCall('addAdicional', { fecha, desc, monto });
+    if (res.ok) {
+      state.adicionales = res.adicionales;
+      renderAdicionales();
+      document.getElementById('a-desc').value = '';
+      document.getElementById('a-monto').value = '';
+      toast('Adicional registrado ✓', 'success');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'REGISTRAR ADICIONAL'; }
+}
+
+async function deleteAdicional(idx) {
+  const a = state.adicionales[idx];
+  if (!a) return;
+  const monto = parseFloat(a.monto || 0);
+  const sign = monto >= 0 ? '+' : '';
+  if (!confirm(`¿Eliminar este adicional?\n\n${a.desc}\nMonto: ${sign}S/ ${fmt(a.monto)}`)) return;
+
+  try {
+    const res = await apiCall('deleteAdicional', { id: a.id });
+    if (res.ok) {
+      state.adicionales = res.adicionales;
+      renderAdicionales();
+      toast('Adicional eliminado', 'info');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+}
+
+function renderAdicionales() {
+  const tbody = document.getElementById('adicionales-table');
+  if (!tbody) return;
+  const list = state.adicionales || [];
+  const total = list.reduce((s, a) => s + parseFloat(a.monto || 0), 0);
+  const totalEl = document.getElementById('adicionales-total');
+  if (totalEl) {
+    const sign = total >= 0 ? '+' : '';
+    totalEl.textContent = `${sign}S/ ${fmt(total)}`;
+    totalEl.style.color = total >= 0 ? 'var(--accent)' : 'var(--accent3)';
+  }
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Sin adicionales registrados</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...list].reverse().map((a, i) => {
+    const origIdx = list.length - 1 - i;
+    const monto = parseFloat(a.monto || 0);
+    const color = monto >= 0 ? 'var(--accent)' : 'var(--accent3)';
+    const sign = monto >= 0 ? '+' : '';
+    return `<tr>
+      <td class="mono">${a.fecha}</td>
+      <td>${a.desc}</td>
+      <td class="mono" style="color:${color}"><strong>${sign}S/ ${fmt(a.monto)}</strong></td>
+      <td><button class="btn-danger" onclick="deleteAdicional(${origIdx})">Eliminar</button></td>
+    </tr>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════════
