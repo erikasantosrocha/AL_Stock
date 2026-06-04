@@ -898,10 +898,11 @@
               <th>Monto</th>
               <th>Saldo después</th>
               <th>Notas</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="pagos-table">
-            <tr><td colspan="5" class="empty-state">Sin pagos registrados</td></tr>
+            <tr><td colspan="6" class="empty-state">Sin pagos registrados</td></tr>
           </tbody>
         </table>
       </div>
@@ -1426,6 +1427,36 @@
   </div>
 </div>
 
+<!-- ═══ MODAL: Editar Pago ═══ -->
+<div class="modal-overlay" id="modal-edit-pago">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title">▸ EDITAR PAGO</div>
+    <input type="hidden" id="edit-pago-idx">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Fecha del pago</label>
+        <input type="date" id="edit-pago-fecha">
+      </div>
+      <div class="form-group">
+        <label>Monto pagado (S/)</label>
+        <input type="number" id="edit-pago-monto" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="form-group full">
+        <label>Descripción / Concepto</label>
+        <input type="text" id="edit-pago-desc" placeholder="Ej: Adelanto semana 1...">
+      </div>
+      <div class="form-group full">
+        <label>Notas adicionales</label>
+        <textarea id="edit-pago-notas" placeholder="Observaciones..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn-primary" onclick="confirmEditPago()">GUARDAR CAMBIOS</button>
+      <button class="btn-secondary" onclick="closeModal('modal-edit-pago')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ MODAL: Saldo Inicial Efectivo ═══ -->
 <div class="modal-overlay" id="modal-saldo-inicial-efectivo">
   <div class="modal" style="max-width:380px">
@@ -1816,18 +1847,90 @@ function renderPagos() {
   document.getElementById('p-saldo-preview').textContent = `S/ ${fmt(MONTO_TOTAL - totalPagado)}`;
 
   if (!state.pagos.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Sin pagos registrados</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Sin pagos registrados</td></tr>';
     return;
   }
-  tbody.innerHTML = [...state.pagos].reverse().map(p => `
+  // Calcular saldo acumulado en orden de inserción
+  let cumul = 0;
+  const withSaldo = state.pagos.map((p, origIdx) => {
+    cumul += parseFloat(p.monto || 0);
+    return { p, origIdx, saldoDespues: MONTO_TOTAL - cumul };
+  });
+  tbody.innerHTML = [...withSaldo].reverse().map(({ p, origIdx, saldoDespues }) => `
     <tr>
       <td class="mono">${p.fecha}</td>
       <td>${p.desc || '—'}</td>
       <td class="mono" style="color:var(--accent2)"><strong>S/ ${fmt(p.monto)}</strong></td>
-      <td class="mono" style="color:var(--accent3)">S/ ${fmt(p.saldo)}</td>
+      <td class="mono" style="color:var(--accent3)">S/ ${fmt(saldoDespues)}</td>
       <td style="color:var(--text-muted);font-size:12px">${p.notas || '—'}</td>
+      <td>
+        <div class="inline-actions">
+          <button class="btn-icon edit" onclick="openEditPago(${origIdx})" title="Editar">✎</button>
+          <button class="btn-icon del" onclick="deletePago(${origIdx})" title="Eliminar">🗑</button>
+        </div>
+      </td>
     </tr>
   `).join('');
+}
+
+function openEditPago(origIdx) {
+  const p = state.pagos[origIdx];
+  if (!p) return;
+  document.getElementById('edit-pago-idx').value = origIdx;
+  document.getElementById('edit-pago-fecha').value = p.fecha || '';
+  document.getElementById('edit-pago-monto').value = p.monto || '';
+  document.getElementById('edit-pago-desc').value = p.desc || '';
+  document.getElementById('edit-pago-notas').value = p.notas || '';
+  openModal('modal-edit-pago');
+}
+
+async function confirmEditPago() {
+  const origIdx = parseInt(document.getElementById('edit-pago-idx').value);
+  const p = state.pagos[origIdx];
+  if (!p) return;
+  const fecha = document.getElementById('edit-pago-fecha').value;
+  const monto = parseFloat(document.getElementById('edit-pago-monto').value);
+  const desc = document.getElementById('edit-pago-desc').value.trim();
+  const notas = document.getElementById('edit-pago-notas').value.trim();
+
+  if (!fecha || isNaN(monto) || monto <= 0) { toast('Completa fecha y monto', 'error'); return; }
+
+  const otrosPagados = state.pagos.reduce((s, pp, i) => i !== origIdx ? s + parseFloat(pp.monto || 0) : s, 0);
+  if (otrosPagados + monto > MONTO_TOTAL) {
+    toast(`El total excedería el monto acordado (S/ ${fmt(MONTO_TOTAL)})`, 'error');
+    return;
+  }
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'GUARDANDO...';
+
+  try {
+    const res = await apiCall('editPago', { id: p.id, fecha, monto, desc, notas });
+    if (res.ok) {
+      state.pagos = res.pagos;
+      renderPagos();
+      renderDashboard();
+      closeModal('modal-edit-pago');
+      toast('Pago actualizado ✓', 'success');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'GUARDAR CAMBIOS'; }
+}
+
+async function deletePago(origIdx) {
+  const p = state.pagos[origIdx];
+  if (!p) return;
+  if (!confirm(`¿Eliminar este pago?\n\nFecha: ${p.fecha}\nMonto: S/ ${fmt(p.monto)}${p.desc ? '\n' + p.desc : ''}`)) return;
+
+  try {
+    const res = await apiCall('deletePago', { id: p.id });
+    if (res.ok) {
+      state.pagos = res.pagos;
+      renderPagos();
+      renderDashboard();
+      toast('Pago eliminado', 'info');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
 }
 
 // ═══════════════════════════════════════════════════════════════
