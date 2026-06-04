@@ -721,6 +721,22 @@
   .th-sortable { cursor: pointer; user-select: none; }
   .th-sortable:hover { color: var(--text); }
   .sort-icon { font-size: 9px; color: var(--text-dim); margin-left: 3px; }
+  .btn-icon {
+    background: transparent;
+    border: 1px solid var(--border);
+    width: 26px; height: 26px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .2s;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-icon.edit { color: var(--steel); }
+  .btn-icon.edit:hover { border-color: var(--steel); color: var(--text); background: rgba(122,143,166,.12); }
+  .btn-icon.del { color: var(--text-dim); }
+  .btn-icon.del:hover { border-color: var(--accent2); color: var(--accent2); background: rgba(232,67,45,.08); }
 </style>
 </head>
 <body>
@@ -774,6 +790,9 @@
     </div>
     <div class="tab" onclick="showTab('partidas')" data-tab="partidas">
       <span class="tab-icon">◱</span>Partidas
+    </div>
+    <div class="tab" onclick="showTab('tarjeta')" data-tab="tarjeta">
+      <span class="tab-icon">◳</span>Tarjeta
     </div>
   </nav>
 
@@ -989,11 +1008,11 @@
         <table>
           <thead id="compras-thead">
             <tr>
-              <th class="th-sortable" data-col="fecha" onclick="sortCompras('fecha')">Fecha <span class="sort-icon">⇅</span></th>
+              <th class="th-sortable" data-col="fecha" onclick="sortCompras('fecha')" style="min-width:108px">Fecha <span class="sort-icon">⇅</span></th>
               <th class="th-sortable" data-col="material" onclick="sortCompras('material')">Material <span class="sort-icon">⇅</span></th>
               <th>Cantidad</th>
               <th>Unidad</th>
-              <th>Costo (S/)</th>
+              <th style="min-width:112px">Costo (S/)</th>
               <th class="th-sortable" data-col="metodo" onclick="sortCompras('metodo')">Método <span class="sort-icon">⇅</span></th>
               <th class="th-sortable" data-col="proveedor" onclick="sortCompras('proveedor')">Proveedor <span class="sort-icon">⇅</span></th>
               <th class="th-sortable" data-col="notas" onclick="sortCompras('notas')">Notas <span class="sort-icon">⇅</span></th>
@@ -1089,6 +1108,94 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- ─────────── BALANCE TARJETA ─────────── -->
+    <div id="tab-tarjeta" class="panel">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Balance Tarjeta</div>
+          <div class="section-sub">Transferencias · Yape · Pagos con Tarjeta</div>
+        </div>
+        <button class="btn-secondary" onclick="openSaldoInicial()">⚙ Saldo Inicial</button>
+      </div>
+
+      <div class="cards-grid">
+        <div class="stat-card blue">
+          <div class="stat-label">Saldo Inicial</div>
+          <div class="stat-value" id="t-card-inicial">—<small>S/</small></div>
+          <div class="stat-note" id="t-card-inicial-note">No configurado</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Total Gastos</div>
+          <div class="stat-value" id="t-card-gastos">0.00<small>S/</small></div>
+          <div class="stat-note" id="t-card-n-gastos">0 movimientos</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Total Ingresos</div>
+          <div class="stat-value" id="t-card-ingresos">0.00<small>S/</small></div>
+          <div class="stat-note" id="t-card-n-ingresos">0 recargas</div>
+        </div>
+        <div id="t-card-saldo-wrap" class="stat-card green">
+          <div class="stat-label">Saldo Actual</div>
+          <div class="stat-value" id="t-card-saldo">—<small>S/</small></div>
+          <div class="progress-wrap"><div class="progress-bar" id="t-bar-gasto" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title">▸ REGISTRAR MOVIMIENTO MANUAL</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Tipo de movimiento</label>
+            <div class="payment-methods" id="t-tipo-buttons">
+              <button class="pm-btn selected" onclick="selectTipoTarjeta(this,'gasto')">▼ Gasto / Pago</button>
+              <button class="pm-btn" onclick="selectTipoTarjeta(this,'ingreso')">▲ Ingreso / Recarga</button>
+            </div>
+            <input type="hidden" id="t-tipo" value="gasto">
+          </div>
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="t-fecha">
+          </div>
+          <div class="form-group">
+            <label>Monto (S/)</label>
+            <input type="number" id="t-monto" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Proveedor / Destino</label>
+            <input type="text" id="t-proveedor" placeholder="Ej: Ferretería, Banco...">
+          </div>
+          <div class="form-group">
+            <label>Descripción</label>
+            <input type="text" id="t-desc" placeholder="Detalle del movimiento">
+          </div>
+          <div class="form-group full">
+            <label>Notas</label>
+            <textarea id="t-notas" placeholder="Observaciones..."></textarea>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="registrarMovimientoTarjeta()">REGISTRAR</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th>Descripción</th>
+              <th>Proveedor</th>
+              <th>Monto (S/)</th>
+              <th>Notas</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tarjeta-table">
+            <tr><td colspan="7" class="empty-state">Sin movimientos registrados</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -1228,6 +1335,64 @@
   </div>
 </div>
 
+<!-- ═══ MODAL: Saldo Inicial Tarjeta ═══ -->
+<div class="modal-overlay" id="modal-saldo-inicial">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">▸ SALDO INICIAL TARJETA</div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Monto disponible en tarjeta (S/)</label>
+      <input type="number" id="si-monto" placeholder="0.00" step="0.01">
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;margin-bottom:16px;line-height:1.6">Punto de partida del balance. Los gastos se descuentan y los ingresos/recargas se suman desde aquí.</p>
+    <div style="display:flex;gap:12px">
+      <button class="btn-primary" onclick="guardarSaldoInicial()">GUARDAR</button>
+      <button class="btn-secondary" onclick="closeModal('modal-saldo-inicial')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Editar Movimiento Tarjeta ═══ -->
+<div class="modal-overlay" id="modal-edit-tarjeta">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">▸ EDITAR MOVIMIENTO</div>
+    <input type="hidden" id="edit-t-idx">
+    <input type="hidden" id="edit-t-tipo">
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Signo</label>
+        <div class="payment-methods" id="edit-t-tipo-buttons">
+          <button class="pm-btn" data-tipo="gasto" onclick="selectEditTipoTarjeta(this,'gasto')">▼ Gasto (−)</button>
+          <button class="pm-btn" data-tipo="ingreso" onclick="selectEditTipoTarjeta(this,'ingreso')">▲ Ingreso (+)</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="edit-t-fecha">
+      </div>
+      <div class="form-group">
+        <label>Monto (S/)</label>
+        <input type="number" id="edit-t-monto" step="0.01" min="0" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Proveedor / Destino</label>
+        <input type="text" id="edit-t-proveedor">
+      </div>
+      <div class="form-group">
+        <label>Descripción</label>
+        <input type="text" id="edit-t-desc">
+      </div>
+      <div class="form-group full">
+        <label>Notas</label>
+        <textarea id="edit-t-notas"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn-primary" onclick="confirmEditTarjeta()">GUARDAR CAMBIOS</button>
+      <button class="btn-secondary" onclick="closeModal('modal-edit-tarjeta')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ MODAL: Gestionar Materiales ═══ -->
 <div class="modal-overlay" id="modal-gestionar-materiales">
   <div class="modal" style="max-width:520px">
@@ -1271,7 +1436,8 @@ let state = {
   compras: [],
   usos: [],
   partidas: [],
-  adicionales: []
+  adicionales: [],
+  tarjeta: []
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -1287,7 +1453,7 @@ window.onload = () => {
   }
   // Set today's date on date fields
   const today = new Date().toISOString().split('T')[0];
-  ['p-fecha','c-fecha','u-fecha','a-fecha'].forEach(id => {
+  ['p-fecha','c-fecha','u-fecha','a-fecha','t-fecha'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = today;
   });
@@ -1381,6 +1547,7 @@ async function loadAll() {
     if (!res.ok) { toast('Error al cargar datos', 'error'); return; }
     state = res.data;
     if (!state.adicionales) state.adicionales = [];
+    if (!state.tarjeta) state.tarjeta = [];
     renderAll();
   } catch(e) {
     toast('Error de conexión', 'error');
@@ -1394,6 +1561,7 @@ function renderAll() {
   renderStock();
   renderPartidas();
   renderAdicionales();
+  renderTarjeta();
   populateSelects();
 }
 
@@ -1562,7 +1730,23 @@ async function registrarCompra() {
       if (!res.ok) { toast(res.error || 'Error al guardar', 'error'); return; }
       if (res.compras) state.compras = res.compras;
     }
-    renderCompras(); renderDashboard(); renderStock(); renderPartidas();
+    // Auto-registro en Balance Tarjeta para métodos que usan la tarjeta
+    if (['Transferencia', 'Yape', 'Tarjeta'].includes(metodo)) {
+      const totalCompra = items.reduce((s, item) => s + item.costo, 0);
+      const matDesc = [...new Set(items.map(i => i.material))].join(', ');
+      try {
+        const resTarjeta = await apiCall('addTarjetaEntry', {
+          fecha,
+          descripcion: matDesc,
+          proveedor: proveedor || '',
+          monto: -totalCompra,
+          notas: notas || '',
+          tipo: 'compra'
+        });
+        if (resTarjeta.ok) state.tarjeta = resTarjeta.tarjeta;
+      } catch(e) {}
+    }
+    renderCompras(); renderDashboard(); renderStock(); renderPartidas(); renderTarjeta();
     rows.forEach(row => {
       row.querySelector('.ci-material').value = '';
       row.querySelector('.ci-cantidad').value = '';
@@ -1625,8 +1809,8 @@ function renderCompras() {
       <td style="font-size:12px;color:var(--text-muted);max-width:150px">${c.notas || '—'}</td>
       <td>
         <div class="inline-actions">
-          <button class="btn-edit" onclick="openEditCompra(${origIdx})">Editar</button>
-          <button class="btn-danger" onclick="deleteCompra(${origIdx})">Eliminar</button>
+          <button class="btn-icon edit" onclick="openEditCompra(${origIdx})" title="Editar">✎</button>
+          <button class="btn-icon del" onclick="deleteCompra(${origIdx})" title="Eliminar">🗑</button>
         </div>
       </td>
     </tr>
@@ -2153,6 +2337,227 @@ async function deleteCompra(idx) {
       toast('Compra eliminada', 'info');
     } else toast(res.error || 'Error al eliminar', 'error');
   } catch(e) { toast('Error de conexión', 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BALANCE TARJETA
+// ═══════════════════════════════════════════════════════════════
+function getTarjetaEntries() {
+  return (state.tarjeta || []).map((t, origIdx) => ({ t, origIdx }))
+    .filter(({ t }) => t.tipo !== 'saldo_inicial');
+}
+
+function getSaldoInicial() {
+  const s = (state.tarjeta || []).find(t => t.tipo === 'saldo_inicial');
+  return s ? parseFloat(s.monto || 0) : null;
+}
+
+function openSaldoInicial() {
+  const si = getSaldoInicial();
+  const el = document.getElementById('si-monto');
+  if (el) el.value = si !== null ? si : '';
+  openModal('modal-saldo-inicial');
+}
+
+async function guardarSaldoInicial() {
+  const monto = parseFloat(document.getElementById('si-monto').value);
+  if (isNaN(monto)) { toast('Ingresa un monto válido', 'error'); return; }
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'GUARDANDO...';
+
+  const existing = (state.tarjeta || []).find(t => t.tipo === 'saldo_inicial');
+  try {
+    let res;
+    if (existing) {
+      res = await apiCall('editTarjetaEntry', { id: existing.id, monto, fecha: existing.fecha, descripcion: 'Saldo inicial', proveedor: '', notas: '' });
+    } else {
+      res = await apiCall('addTarjetaEntry', {
+        fecha: new Date().toISOString().split('T')[0],
+        descripcion: 'Saldo inicial', proveedor: '',
+        monto, notas: '', tipo: 'saldo_inicial'
+      });
+    }
+    if (res.ok) {
+      state.tarjeta = res.tarjeta;
+      renderTarjeta();
+      closeModal('modal-saldo-inicial');
+      toast('Saldo inicial guardado ✓', 'success');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'GUARDAR'; }
+}
+
+function selectTipoTarjeta(btn, tipo) {
+  document.querySelectorAll('#t-tipo-buttons .pm-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('t-tipo').value = tipo;
+}
+
+function selectEditTipoTarjeta(btn, tipo) {
+  document.querySelectorAll('#edit-t-tipo-buttons .pm-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('edit-t-tipo').value = tipo;
+}
+
+async function registrarMovimientoTarjeta() {
+  const fecha = document.getElementById('t-fecha').value;
+  const tipo = document.getElementById('t-tipo').value;
+  const montoAbs = parseFloat(document.getElementById('t-monto').value);
+  const proveedor = document.getElementById('t-proveedor').value.trim();
+  const desc = document.getElementById('t-desc').value.trim();
+  const notas = document.getElementById('t-notas').value.trim();
+
+  if (!fecha || isNaN(montoAbs) || montoAbs <= 0) { toast('Completa fecha y monto', 'error'); return; }
+
+  const monto = tipo === 'ingreso' ? montoAbs : -montoAbs;
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'GUARDANDO...';
+
+  try {
+    const res = await apiCall('addTarjetaEntry', { fecha, descripcion: desc, proveedor, monto, notas, tipo });
+    if (res.ok) {
+      state.tarjeta = res.tarjeta;
+      renderTarjeta();
+      document.getElementById('t-monto').value = '';
+      document.getElementById('t-proveedor').value = '';
+      document.getElementById('t-desc').value = '';
+      document.getElementById('t-notas').value = '';
+      toast('Movimiento registrado ✓', 'success');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'REGISTRAR'; }
+}
+
+function openEditTarjeta(origIdx) {
+  const t = (state.tarjeta || [])[origIdx];
+  if (!t) return;
+  document.getElementById('edit-t-idx').value = origIdx;
+  document.getElementById('edit-t-fecha').value = t.fecha || '';
+  const monto = parseFloat(t.monto || 0);
+  document.getElementById('edit-t-monto').value = Math.abs(monto);
+  document.getElementById('edit-t-proveedor').value = t.proveedor || '';
+  document.getElementById('edit-t-desc').value = t.descripcion || '';
+  document.getElementById('edit-t-notas').value = t.notas || '';
+  const signo = monto >= 0 ? 'ingreso' : 'gasto';
+  document.getElementById('edit-t-tipo').value = signo;
+  document.querySelectorAll('#edit-t-tipo-buttons .pm-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.tipo === signo);
+  });
+  openModal('modal-edit-tarjeta');
+}
+
+async function confirmEditTarjeta() {
+  const origIdx = parseInt(document.getElementById('edit-t-idx').value);
+  const t = (state.tarjeta || [])[origIdx];
+  if (!t) return;
+  const fecha = document.getElementById('edit-t-fecha').value;
+  const montoAbs = parseFloat(document.getElementById('edit-t-monto').value);
+  const signo = document.getElementById('edit-t-tipo').value;
+  const proveedor = document.getElementById('edit-t-proveedor').value.trim();
+  const desc = document.getElementById('edit-t-desc').value.trim();
+  const notas = document.getElementById('edit-t-notas').value.trim();
+
+  if (!fecha || isNaN(montoAbs)) { toast('Completa los campos', 'error'); return; }
+  const monto = signo === 'ingreso' ? Math.abs(montoAbs) : -Math.abs(montoAbs);
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'GUARDANDO...';
+
+  try {
+    const res = await apiCall('editTarjetaEntry', { id: t.id, fecha, descripcion: desc, proveedor, monto, notas });
+    if (res.ok) {
+      state.tarjeta = res.tarjeta;
+      renderTarjeta();
+      closeModal('modal-edit-tarjeta');
+      toast('Movimiento actualizado ✓', 'success');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'GUARDAR CAMBIOS'; }
+}
+
+async function deleteTarjeta(origIdx) {
+  const t = (state.tarjeta || [])[origIdx];
+  if (!t) return;
+  const monto = parseFloat(t.monto || 0);
+  if (!confirm(`¿Eliminar este movimiento?\n\n${t.descripcion || '—'}\nS/ ${fmt(Math.abs(monto))}`)) return;
+
+  try {
+    const res = await apiCall('deleteTarjetaEntry', { id: t.id });
+    if (res.ok) {
+      state.tarjeta = res.tarjeta;
+      renderTarjeta();
+      toast('Movimiento eliminado', 'info');
+    } else toast(res.error || 'Error', 'error');
+  } catch(e) { toast('Error de conexión', 'error'); }
+}
+
+function renderTarjeta() {
+  const allTarjeta = state.tarjeta || [];
+  const entries = getTarjetaEntries();
+  const saldoInicial = getSaldoInicial();
+
+  const gastos = entries.filter(({ t }) => parseFloat(t.monto || 0) < 0);
+  const ingresos = entries.filter(({ t }) => parseFloat(t.monto || 0) > 0);
+  const totalGastos = gastos.reduce((s, { t }) => s + Math.abs(parseFloat(t.monto || 0)), 0);
+  const totalIngresos = ingresos.reduce((s, { t }) => s + parseFloat(t.monto || 0), 0);
+  const saldoActual = (saldoInicial !== null ? saldoInicial : 0) + totalIngresos - totalGastos;
+
+  // Cards
+  const cardIni = document.getElementById('t-card-inicial');
+  const cardIniNote = document.getElementById('t-card-inicial-note');
+  if (cardIni) cardIni.innerHTML = saldoInicial !== null ? `${fmt(saldoInicial)}<small>S/</small>` : `—<small>S/</small>`;
+  if (cardIniNote) cardIniNote.textContent = saldoInicial !== null ? 'Configurado' : 'No configurado aún';
+
+  const el = (id) => document.getElementById(id);
+  if (el('t-card-gastos')) el('t-card-gastos').innerHTML = `${fmt(totalGastos)}<small>S/</small>`;
+  if (el('t-card-n-gastos')) el('t-card-n-gastos').textContent = `${gastos.length} movimiento${gastos.length !== 1 ? 's' : ''}`;
+  if (el('t-card-ingresos')) el('t-card-ingresos').innerHTML = `${fmt(totalIngresos)}<small>S/</small>`;
+  if (el('t-card-n-ingresos')) el('t-card-n-ingresos').textContent = `${ingresos.length} recarga${ingresos.length !== 1 ? 's' : ''}`;
+  if (el('t-card-saldo')) el('t-card-saldo').innerHTML = `${fmt(saldoActual)}<small>S/</small>`;
+
+  const wrap = document.getElementById('t-card-saldo-wrap');
+  if (wrap) wrap.className = 'stat-card ' + (saldoActual >= 0 ? 'green' : 'red');
+
+  const base = (saldoInicial || 0) + totalIngresos;
+  const pct = base > 0 ? Math.min(100, (totalGastos / base) * 100) : 0;
+  const bar = document.getElementById('t-bar-gasto');
+  if (bar) bar.style.width = pct + '%';
+
+  // Table
+  const tbody = document.getElementById('tarjeta-table');
+  if (!tbody) return;
+  if (!entries.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Sin movimientos registrados</td></tr>';
+    return;
+  }
+
+  const tipoTag = {
+    compra:  '<span class="tag tag-yellow">Auto</span>',
+    gasto:   '<span class="tag tag-red">Gasto</span>',
+    ingreso: '<span class="tag tag-green">Ingreso</span>'
+  };
+
+  const sorted = [...entries].sort((a, b) => String(b.t.fecha).localeCompare(String(a.t.fecha)));
+  tbody.innerHTML = sorted.map(({ t, origIdx }) => {
+    const monto = parseFloat(t.monto || 0);
+    const color = monto < 0 ? 'var(--accent2)' : 'var(--accent3)';
+    const sign = monto >= 0 ? '+' : '−';
+    return `<tr>
+      <td class="mono">${t.fecha}</td>
+      <td>${tipoTag[t.tipo] || `<span class="tag tag-gray">${t.tipo || '—'}</span>`}</td>
+      <td>${t.descripcion || '—'}</td>
+      <td>${t.proveedor || '—'}</td>
+      <td class="mono" style="color:${color}"><strong>${sign} S/ ${fmt(Math.abs(monto))}</strong></td>
+      <td style="font-size:12px;color:var(--text-muted)">${t.notas || '—'}</td>
+      <td>
+        <div class="inline-actions">
+          <button class="btn-icon edit" onclick="openEditTarjeta(${origIdx})" title="Editar">✎</button>
+          <button class="btn-icon del" onclick="deleteTarjeta(${origIdx})" title="Eliminar">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════════
